@@ -2,7 +2,7 @@
 
 ## Goal
 
-Use one shared URL where viewers always see the latest weekly Farmhannong Agro Weekly DB.
+Use one shared URL where viewers always see the latest weekly Farmhannong Agro Weekly.
 
 ## Recommended Setup
 
@@ -36,4 +36,3 @@ People with the URL can keep using the same URL every week. They do not need a n
 ## Weekly Automation
 
 The weekly automation should update `index.html` in this folder, commit the change, and push it to the GitHub repository. The hosting provider will then redeploy the same URL.
-

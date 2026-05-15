@@ -1,4 +1,4 @@
-# Farmhannong Agro Weekly DB
+# Farmhannong Agro Weekly
 
 Static dashboard for Farmhannong Agro Weekly card news.
 
@@ -24,4 +24,3 @@ Viewers should use the deployed URL, not an emailed HTML attachment. The URL wil
 
 Only repository collaborators with write access can edit or delete the dashboard source.
 People who receive only the deployed site URL can view the dashboard but cannot modify the source file.
-

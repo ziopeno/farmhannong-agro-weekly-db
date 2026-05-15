@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmhannong Agro Weekly Dashboard</title>
+    <title>Farmhannong Agro Weekly</title>
     <!-- Apache ECharts removed to save space as it's not used -->
     <style>
         :root {
@@ -437,7 +437,7 @@
     <header>
         <div class="header-center" onclick="resetAllFilters()">
             
-            <h1 class="header-title-text">🌱 Farmhannong Agro Weekly DB</h1>
+            <h1 class="header-title-text">🌱 Farmhannong Agro Weekly</h1>
         </div>
         
         <div class="search-container">
@@ -902,7 +902,7 @@
             }).join('');
 
             printArea.innerHTML = `
-                <h1>Farmhannong Agro Weekly DB - 현재 결과값</h1>
+                <h1>Farmhannong Agro Weekly - 현재 결과값</h1>
                 <div class="print-summary">
                     출력일: ${escapeHtml(printedAt)}<br>
                     검색 조건: ${escapeHtml(filterSummary)}<br>
