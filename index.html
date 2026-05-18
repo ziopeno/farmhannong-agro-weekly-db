@@ -300,6 +300,12 @@
             background: #2d3748;
         }
         .export-btn:hover { background: #1a202c; }
+        .search-export-btn {
+            width: 250px;
+            height: 41px;
+            border-radius: 20px;
+            margin-top: 7px;
+        }
 
         .search-container {
             position: absolute;
@@ -630,7 +636,6 @@
                 </div>
                 <div class="filter-actions">
                     <button class="reset-btn" onclick="resetAllFilters()">초기화 ↺</button>
-                    <button class="reset-btn export-btn" onclick="printCurrentResults()">현재 결과값 출력</button>
                 </div>
             </div>
         </details>
@@ -639,6 +644,7 @@
             <input type="text" id="searchInput" placeholder="통합 검색 (키워드 입력)..." onkeyup="applyFilters()">
             <div class="update-info">최근 업데이트: 2026-05-18</div>
             <div class="next-update-info">다음 업데이트 예정: 2026-05-25 09:00 (KST)</div>
+            <button class="reset-btn export-btn search-export-btn" onclick="printCurrentResults()">현재 결과값 출력</button>
         </div>
     </header>
 
@@ -654,7 +660,7 @@
         </div>
 
         <div style="display:flex; flex-direction:column; flex-grow:1; overflow:hidden;">
-            <div class="content-area" id="scroll-area">
+            <div class="content-area" id="scroll-area" onclick="closeFiltersPanel()">
                 <div class="active-filters" id="activeFilters"></div>
                 <div class="grid" id="card-grid"></div>
             </div>
@@ -769,6 +775,11 @@
         function clearKeywordFilter() {
             document.getElementById('searchInput').value = '';
             applyFilters();
+        }
+
+        function closeFiltersPanel() {
+            const panel = document.querySelector('.filters-panel');
+            if (panel) panel.open = false;
         }
 
         function jsString(value) {
