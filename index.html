@@ -766,7 +766,7 @@
                     tags.push(`
                         <span class="active-filter-tag">
                             ${escapeHtml(group.title)}: ${escapeHtml(item.label)}
-                            <button class="active-filter-remove" type="button" aria-label="${escapeHtml(item.label)} 조건 삭제" onclick="removeFilterValue(${jsString(item.name)}, ${jsString(item.value)})">×</button>
+                            <button class="active-filter-remove" type="button" aria-label="${escapeHtml(item.label)} 조건 삭제" onclick='removeFilterValue(${jsString(item.name)}, ${jsString(item.value)})'>×</button>
                         </span>
                     `);
                 });
