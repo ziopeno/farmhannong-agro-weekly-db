@@ -39,6 +39,24 @@
             z-index: 10;
             position: relative;
             flex: 0 0 auto;
+            overflow: hidden;
+        }
+        header::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 56%;
+            background-image:
+                linear-gradient(90deg, rgba(255,255,255,0.28), rgba(255,255,255,0.64) 72%, rgba(255,255,255,0.96)),
+                url("assets/header-people-illustration.png");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: left center;
+            opacity: 0.32;
+            pointer-events: none;
+            z-index: 0;
         }
         
         .header-center {
@@ -46,6 +64,8 @@
             align-items: center;
             gap: 15px;
             cursor: pointer; /* Clickable to reset */
+            position: relative;
+            z-index: 1;
         }
         .header-title-text { 
             margin: 0; 
@@ -70,6 +90,8 @@
         .filters-panel {
             width: min(1180px, calc(100vw - 80px));
             margin-top: 14px;
+            position: relative;
+            z-index: 1;
         }
         .filters-panel summary {
             list-style: none;
@@ -281,6 +303,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            z-index: 2;
         }
         .search-container input {
             padding: 10px 20px;
