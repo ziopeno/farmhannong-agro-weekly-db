@@ -321,6 +321,57 @@
             padding: 30px 40px;
             overflow-y: auto;
         }
+        .active-filters {
+            display: none;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 0 18px;
+            padding: 12px 14px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .active-filters.has-filters {
+            display: flex;
+        }
+        .active-filters-label {
+            font-size: 0.86em;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-right: 2px;
+        }
+        .active-filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 30px;
+            padding: 5px 8px 5px 10px;
+            border: 1px solid rgba(0, 102, 0, 0.22);
+            border-radius: 999px;
+            background: var(--fhn-light);
+            color: var(--fhn-green);
+            font-size: 0.86em;
+            font-weight: 800;
+        }
+        .active-filter-remove {
+            width: 18px;
+            height: 18px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(0, 102, 0, 0.12);
+            color: var(--fhn-green);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 18px;
+            padding: 0;
+            transition: background 0.16s ease, transform 0.16s ease;
+        }
+        .active-filter-remove:hover {
+            background: rgba(0, 102, 0, 0.22);
+            transform: scale(1.08);
+        }
         
         .grid {
             display: grid;
@@ -575,6 +626,7 @@
 
         <div style="display:flex; flex-direction:column; flex-grow:1; overflow:hidden;">
             <div class="content-area" id="scroll-area">
+                <div class="active-filters" id="activeFilters"></div>
                 <div class="grid" id="card-grid"></div>
             </div>
         </div>
@@ -668,6 +720,69 @@
         function getCheckedLabels(name, fallbackText) {
             const labels = getCheckedLabelArray(name);
             return labels.length ? labels.join(', ') : fallbackText;
+        }
+
+        function getCheckedFilterItems(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(input => ({
+                name,
+                value: input.value,
+                label: input.nextElementSibling?.innerText || input.value
+            }));
+        }
+
+        function removeFilterValue(name, value) {
+            const input = Array.from(document.querySelectorAll(`input[name="${name}"]`)).find(item => item.value === value);
+            if (input) input.checked = false;
+            if (name === 'yearFilter') updateDateDropdown();
+            applyFilters();
+        }
+
+        function clearKeywordFilter() {
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        }
+
+        function jsString(value) {
+            return JSON.stringify(String(value || ''));
+        }
+
+        function renderActiveFilters() {
+            const container = document.getElementById('activeFilters');
+            if (!container) return;
+
+            const filterGroups = [
+                { title: '연도', items: getCheckedFilterItems('yearFilter') },
+                { title: '발행일', items: getCheckedFilterItems('dateFilter') },
+                { title: '분류', items: getCheckedFilterItems('categoryFilter') },
+                { title: '제품군', items: getCheckedFilterItems('productTypeFilter') },
+                { title: '기업', items: getCheckedFilterItems('companyFilter') },
+                { title: '국가', items: getCheckedFilterItems('countryFilter') }
+            ];
+            const keyword = document.getElementById('searchInput').value.trim();
+
+            const tags = [];
+            filterGroups.forEach(group => {
+                group.items.forEach(item => {
+                    tags.push(`
+                        <span class="active-filter-tag">
+                            ${escapeHtml(group.title)}: ${escapeHtml(item.label)}
+                            <button class="active-filter-remove" type="button" aria-label="${escapeHtml(item.label)} 조건 삭제" onclick="removeFilterValue(${jsString(item.name)}, ${jsString(item.value)})">×</button>
+                        </span>
+                    `);
+                });
+            });
+
+            if (keyword) {
+                tags.push(`
+                    <span class="active-filter-tag">
+                        키워드: ${escapeHtml(keyword)}
+                        <button class="active-filter-remove" type="button" aria-label="키워드 조건 삭제" onclick="clearKeywordFilter()">×</button>
+                    </span>
+                `);
+            }
+
+            container.className = `active-filters${tags.length ? ' has-filters' : ''}`;
+            container.innerHTML = tags.length ? `<span class="active-filters-label">적용된 조건</span>${tags.join('')}` : '';
         }
 
         function updateFilterSummary(summaryId, inputName, fallbackText) {
@@ -789,6 +904,7 @@
             grid.innerHTML = '';
             titleList.innerHTML = '';
             updateFilterSummaries();
+            renderActiveFilters();
             
             const selectedYears = getCheckedValues('yearFilter');
             const selectedDates = getCheckedValues('dateFilter');
