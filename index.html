@@ -1154,12 +1154,26 @@
             title.innerText = `${item.source} - 원문 제목/출처`;
 
             let sourceLinkHtml = '';
+            const originalTitle = item.raw_title || item.title.replace(/^\d+\.\s*/, '');
+            const titleSearchQuery = `"${originalTitle}" ${item.source || ''}`;
+            const titleSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(titleSearchQuery);
+            const sourceSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(`${item.source || ''} ${originalTitle}`);
             if(item.link) {
                 const isGoogleSearch = item.link.includes('google.com/search');
-                const linkLabel = isGoogleSearch ? '구글에서 원문 검색하기' : '출처 사이트 열기';
+                const linkLabel = isGoogleSearch ? '기존 구글 검색 열기' : '출처 사이트 직접 열기';
                 sourceLinkHtml = `
-                    <div style="margin-top: 14px;">
-                        <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">${linkLabel}</a>
+                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
+                        <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">${linkLabel}</a>
+                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
+                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.85em; color: #718096; margin-bottom: 0;">* 일부 원문 사이트는 외부 직접 접속을 차단해 403/404가 보일 수 있습니다. 그럴 때는 제목 검색 버튼을 사용하면 같은 원문이나 재게시 자료를 찾기 쉽습니다.</p>
+                `;
+            } else {
+                sourceLinkHtml = `
+                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
+                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
+                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
                     </div>
                 `;
             }
