@@ -48,8 +48,10 @@ function mondayOfCurrentWeek() {
   return monday.toISOString().slice(0, 10);
 }
 
-function fetchUrl(url) {
-  return run('curl', ['-L', '--max-time', '30', '-sS', url]);
+function fetchUrlToFile(url, label) {
+  const target = path.join('/tmp', `farmhannong-${label.replace(/\s+/g, '-')}.html`);
+  run('curl', ['-L', '--max-time', '30', '-sS', '-o', target, url]);
+  return target;
 }
 
 function ensure(condition, message) {
@@ -108,9 +110,9 @@ function main() {
   ensure(localSha === remoteSha, `origin/main is not synced: local=${localSha}, remote=${remoteSha}`);
 
   if (args.has('--check-pages')) {
-    const raw = parseRemoteHtml(fetchUrl('https://raw.githubusercontent.com/ziopeno/farmhannong-agro-weekly-db/main/index.html'), 'raw main');
+    const raw = parseDashboard(fetchUrlToFile('https://raw.githubusercontent.com/ziopeno/farmhannong-agro-weekly-db/main/index.html', 'raw main'), 'raw main');
     ensure(raw.latest === local.latest, `raw GitHub file is stale: raw=${raw.latest}, local=${local.latest}`);
-    const pages = parseRemoteHtml(fetchUrl('https://ziopeno.github.io/farmhannong-agro-weekly-db/'), 'github pages');
+    const pages = parseDashboard(fetchUrlToFile('https://ziopeno.github.io/farmhannong-agro-weekly-db/', 'github pages'), 'github pages');
     ensure(pages.latest === local.latest, `GitHub Pages is stale: pages=${pages.latest}, local=${local.latest}`);
   }
 
@@ -122,12 +124,6 @@ function main() {
     localSha,
     remoteSha,
   }, null, 2));
-}
-
-function parseRemoteHtml(html, label) {
-  const tempPath = path.join('/tmp', `farmhannong-${label.replace(/\s+/g, '-')}.html`);
-  fs.writeFileSync(tempPath, html);
-  return parseDashboard(tempPath, label);
 }
 
 main();
