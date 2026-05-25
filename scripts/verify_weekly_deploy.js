@@ -9,11 +9,12 @@ const downloadsPath = '/Users/ziopeno/Downloads/Farmhannong_Agro_Dashboard_FINAL
 const args = new Set(process.argv.slice(2));
 
 function run(command, commandArgs, options = {}) {
-  return execFileSync(command, commandArgs, {
+  const result = execFileSync(command, commandArgs, {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: options.stdio || ['ignore', 'pipe', 'pipe'],
-  }).trim();
+  });
+  return typeof result === 'string' ? result.trim() : '';
 }
 
 function parseDashboard(filePath, label) {
