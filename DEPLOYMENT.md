@@ -35,4 +35,6 @@ People with the URL can keep using the same URL every week. They do not need a n
 
 ## Weekly Automation
 
-The weekly automation should update `index.html` in this folder, commit the change, and push it to the GitHub repository. The hosting provider will then redeploy the same URL.
+The weekly automation should update `index.html` in this folder with exactly 20 article cards for the new Monday date key, commit the change, and push it to the GitHub repository. The hosting provider will then redeploy the same URL.
+
+Run `node scripts/verify_weekly_deploy.js --sync-downloads --expect-current-week` before deployment. The check fails if the latest week has anything other than 20 cards.

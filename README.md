@@ -2,6 +2,8 @@
 
 Static dashboard for Farmhannong Agro Weekly card news.
 
+Weekly updates must add exactly 20 article cards for the new Monday date key. Use `node scripts/verify_weekly_deploy.js --sync-downloads --expect-current-week` to catch incomplete updates before deployment.
+
 ## Deployment
 
 This folder is prepared for static hosting.

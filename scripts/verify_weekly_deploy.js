@@ -7,6 +7,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const indexPath = path.join(repoRoot, 'index.html');
 const downloadsPath = '/Users/ziopeno/Downloads/Farmhannong_Agro_Dashboard_FINAL_V32.html';
 const args = new Set(process.argv.slice(2));
+const REQUIRED_WEEKLY_CARD_COUNT = 20;
 
 function run(command, commandArgs, options = {}) {
   const result = execFileSync(command, commandArgs, {
@@ -99,6 +100,8 @@ function main() {
   const local = parseDashboard(indexPath, 'local index');
   const downloads = parseDashboard(downloadsPath, 'downloads copy');
   ensure(local.latest === downloads.latest, `downloads copy is not synced: local=${local.latest}, downloads=${downloads.latest}`);
+  ensure(local.cards === REQUIRED_WEEKLY_CARD_COUNT, `latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${local.latest}, cards=${local.cards}`);
+  ensure(downloads.cards === REQUIRED_WEEKLY_CARD_COUNT, `downloads copy latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${downloads.latest}, cards=${downloads.cards}`);
   ensure(local.latestText === local.latest, `recent update label mismatch: label=${local.latestText}, latest=${local.latest}`);
   if (args.has('--expect-current-week')) {
     ensure(local.latest === expectedWeek, `latest week is not current week: latest=${local.latest}, expected=${expectedWeek}`);
@@ -112,14 +115,17 @@ function main() {
   if (args.has('--check-pages')) {
     const raw = parseDashboard(fetchUrlToFile('https://raw.githubusercontent.com/ziopeno/farmhannong-agro-weekly-db/main/index.html', 'raw main'), 'raw main');
     ensure(raw.latest === local.latest, `raw GitHub file is stale: raw=${raw.latest}, local=${local.latest}`);
+    ensure(raw.cards === REQUIRED_WEEKLY_CARD_COUNT, `raw GitHub latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${raw.latest}, cards=${raw.cards}`);
     const pages = parseDashboard(fetchUrlToFile('https://ziopeno.github.io/farmhannong-agro-weekly-db/', 'github pages'), 'github pages');
     ensure(pages.latest === local.latest, `GitHub Pages is stale: pages=${pages.latest}, local=${local.latest}`);
+    ensure(pages.cards === REQUIRED_WEEKLY_CARD_COUNT, `GitHub Pages latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${pages.latest}, cards=${pages.cards}`);
   }
 
   console.log(JSON.stringify({
     ok: true,
     latest: local.latest,
     cards: local.cards,
+    requiredCards: REQUIRED_WEEKLY_CARD_COUNT,
     nextUpdate: local.nextText,
     localSha,
     remoteSha,
