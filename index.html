@@ -92,7 +92,7 @@
             width: min(1180px, calc(100vw - 80px));
             margin-top: 14px;
             position: relative;
-            z-index: 1;
+            z-index: 6;
         }
         .filters-panel summary {
             list-style: none;
@@ -172,6 +172,29 @@
             color: var(--fhn-green);
             font-size: 0.86em;
             font-weight: 700;
+        }
+        .filter-option-search {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+            padding: 9px 12px;
+            border: 1px solid rgba(226,232,240,0.92);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-dark);
+            font-size: 0.9em;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+        }
+        .filter-option-search:focus {
+            border-color: var(--fhn-green);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,102,0,0.08);
+        }
+        .filter-option-search::placeholder {
+            color: #a0aec0;
+            font-weight: 600;
         }
         .filter-select {
             padding: 10px;
@@ -275,6 +298,20 @@
             background: var(--fhn-light);
             color: var(--fhn-green);
             box-shadow: none;
+        }
+        .filter-chip.is-option-hidden {
+            display: none;
+        }
+        .filter-option-empty {
+            display: none;
+            padding: 14px 8px;
+            color: var(--text-light);
+            font-size: 0.86em;
+            font-weight: 700;
+            text-align: center;
+        }
+        .filter-option-empty.is-visible {
+            display: block;
         }
         .filter-actions {
             align-self: flex-end;
@@ -597,14 +634,17 @@
             <div class="filters-container">
                 <div class="filter-group wide-filter">
                     <span class="filter-label">📅 연도 <span class="filter-summary" id="yearFilterSummary">전체 연도</span></span>
+                    <input class="filter-option-search" id="yearFilterSearch" type="search" placeholder="연도 검색..." autocomplete="off" aria-label="연도 항목 검색" oninput="filterChecklistOptions('yearFilter', this.value)">
                     <div id="yearFilter" class="multi-filter"></div>
                 </div>
                 <div class="filter-group wide-filter">
                     <span class="filter-label">📆 발행일 <span class="filter-summary" id="dateFilterSummary">전체 발행일</span></span>
+                    <input class="filter-option-search" id="dateFilterSearch" type="search" placeholder="발행일 검색..." autocomplete="off" aria-label="발행일 항목 검색" oninput="filterChecklistOptions('dateFilter', this.value)">
                     <div id="dateFilter" class="multi-filter"></div>
                 </div>
                 <div class="filter-group wide-filter">
                     <span class="filter-label">📑 분류 <span class="filter-summary" id="categoryFilterSummary">전체 분류</span></span>
+                    <input class="filter-option-search" id="categoryFilterSearch" type="search" placeholder="분류 검색..." autocomplete="off" aria-label="분류 항목 검색" oninput="filterChecklistOptions('categoryFilter', this.value)">
                     <div id="categoryFilter" class="multi-filter">
                         <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="reg" onchange="applyFilters()"><span>등록(REG)</span></label>
                         <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="dev" onchange="applyFilters()"><span>개발(DEV)</span></label>
@@ -613,6 +653,7 @@
                 </div>
                 <div class="filter-group wide-filter">
                     <span class="filter-label">🧪 제품군 <span class="filter-summary" id="productTypeFilterSummary">전체 제품군</span></span>
+                    <input class="filter-option-search" id="productTypeFilterSearch" type="search" placeholder="제품군 검색..." autocomplete="off" aria-label="제품군 항목 검색" oninput="filterChecklistOptions('productTypeFilter', this.value)">
                     <div id="productTypeFilter" class="multi-filter">
                         <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="insecticide" onchange="applyFilters()"><span>살충제</span></label>
                         <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="fungicide" onchange="applyFilters()"><span>살균제</span></label>
@@ -628,10 +669,12 @@
                 </div>
                 <div class="filter-group wide-filter">
                     <span class="filter-label">🏢 기업 <span class="filter-summary" id="companyFilterSummary">전체 기업</span></span>
+                    <input class="filter-option-search" id="companyFilterSearch" type="search" placeholder="기업 검색..." autocomplete="off" aria-label="기업 항목 검색" oninput="filterChecklistOptions('companyFilter', this.value)">
                     <div id="companyFilter" class="multi-filter"></div>
                 </div>
                 <div class="filter-group wide-filter">
                     <span class="filter-label">🌍 국가 <span class="filter-summary" id="countryFilterSummary">전체 지역</span></span>
+                    <input class="filter-option-search" id="countryFilterSearch" type="search" placeholder="국가 검색..." autocomplete="off" aria-label="국가 항목 검색" oninput="filterChecklistOptions('countryFilter', this.value)">
                     <div id="countryFilter" class="multi-filter"></div>
                 </div>
                 <div class="filter-actions">
@@ -869,15 +912,59 @@
             document.querySelectorAll(`input[name="${name}"]`).forEach(input => input.checked = false);
         }
 
+        function normalizeFilterOptionText(value) {
+            return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function filterChecklistOptions(containerId, queryValue) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const searchInput = document.getElementById(`${containerId}Search`);
+            const query = normalizeFilterOptionText(queryValue ?? searchInput?.value ?? '');
+            const chips = Array.from(container.querySelectorAll('.filter-chip'));
+            let visibleCount = 0;
+
+            chips.forEach(chip => {
+                const input = chip.querySelector('input');
+                const optionText = normalizeFilterOptionText(`${chip.innerText || ''} ${input?.value || ''}`);
+                const matches = !query || optionText.includes(query);
+                chip.classList.toggle('is-option-hidden', !matches);
+                if (matches) visibleCount += 1;
+            });
+
+            let emptyMessage = container.querySelector('.filter-option-empty');
+            if (!emptyMessage) {
+                emptyMessage = document.createElement('div');
+                emptyMessage.className = 'filter-option-empty';
+                emptyMessage.innerText = '검색 결과가 없습니다.';
+                container.appendChild(emptyMessage);
+            }
+            emptyMessage.classList.toggle('is-visible', chips.length > 0 && visibleCount === 0);
+        }
+
+        function applyAllChecklistSearches() {
+            ['yearFilter', 'dateFilter', 'categoryFilter', 'productTypeFilter', 'companyFilter', 'countryFilter']
+                .forEach(containerId => filterChecklistOptions(containerId));
+        }
+
+        function clearChecklistSearches() {
+            document.querySelectorAll('.filter-option-search').forEach(input => {
+                input.value = '';
+            });
+            applyAllChecklistSearches();
+        }
+
         function renderCheckboxFilter(containerId, inputName, items, labelFormatter, onChangeHandler = 'applyFilters()') {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             items.forEach(value => {
                 const label = document.createElement('label');
                 label.className = 'filter-chip';
-                label.innerHTML = `<input type="checkbox" name="${inputName}" value="${value}" onchange="${onChangeHandler}"><span>${labelFormatter(value)}</span>`;
+                label.innerHTML = `<input type="checkbox" name="${inputName}" value="${escapeHtml(value)}" onchange="${onChangeHandler}"><span>${escapeHtml(labelFormatter(value))}</span>`;
                 container.appendChild(label);
             });
+            filterChecklistOptions(containerId);
         }
 
         function getCheckedLabelArray(name) {
@@ -1125,6 +1212,7 @@
             renderCheckboxFilter('countryFilter', 'countryFilter', Array.from(countriesSet).sort(), country => country);
 
             updateDateDropdown();
+            applyAllChecklistSearches();
             applyFilters();
         }
 
@@ -1137,10 +1225,12 @@
             document.querySelectorAll('input[name="dateFilter"]').forEach(input => {
                 input.checked = selectedDates.has(input.value);
             });
+            filterChecklistOptions('dateFilter');
             updateFilterSummaries();
         }
 
         function resetAllFilters() {
+            clearChecklistSearches();
             clearCheckedValues('yearFilter');
             clearCheckedValues('categoryFilter');
             clearCheckedValues('productTypeFilter');
