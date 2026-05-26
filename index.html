@@ -700,9 +700,142 @@
         let yearsSet = new Set();
         let companiesSet = new Set();
         let countriesSet = new Set();
-        const companyAliases = {
-            "Farmhannong": ["farmhannong", "farm hannong", "팜한농"]
+        const companyCanonicalOverrides = {
+            "팜한농": "Farmhannong",
+            "farm hannong": "Farmhannong",
+            "farmhannong": "Farmhannong",
+            "adama": "ADAMA",
+            "adama ltd": "ADAMA",
+            "bayer crop science": "Bayer",
+            "bayer cropscience": "Bayer",
+            "basf agricultural solutions": "BASF",
+            "corteva agriscience": "Corteva",
+            "corteva crop protection": "Corteva",
+            "syngenta group": "Syngenta",
+            "syngenta crop protection": "Syngenta",
+            "syngenta seeds": "Syngenta",
+            "sumitomo chem": "Sumitomo",
+            "sumitomo chemical": "Sumitomo",
+            "kumiai chemical": "Kumiai",
+            "valent biosciences": "Valent",
+            "valent north america": "Valent",
+            "valent usa": "Valent",
+            "nihon-nohyaku": "Nihon Nohyaku",
+            "nissan": "Nissan Chemical",
+            "greenlight": "GreenLight Biosciences",
+            "greenlight bioscience": "GreenLight Biosciences",
+            "ginkgo": "Ginkgo Bioworks",
+            "mbi": "Marrone Bio Innovations",
+            "marrone bio innovations": "Marrone Bio Innovations",
+            "pggws": "PGG Wrightson",
+            "pgg wrightson seeds": "PGG Wrightson",
+            "ceradis b.v": "Ceradis",
+            "certis europe": "Certis",
+            "amvac": "AMVAC",
+            "america vanguard": "American Vanguard",
+            "mustgrow": "MustGrow",
+            "mustgrow biologics": "MustGrow",
+            "rovensa next": "Rovensa",
+            "deere": "John Deere",
+            "k plus s": "K+S",
+            "kpluss": "K+S"
         };
+        const companyMentionRules = {
+            "Farmhannong": ["farmhannong", "farm hannong", "팜한농"],
+            "Bayer": ["bayer", "bayer crop science"],
+            "Syngenta": ["syngenta", "syngenta group", "syngenta crop protection", "syngenta seeds"],
+            "Corteva": ["corteva", "corteva agriscience"],
+            "BASF": ["basf"],
+            "FMC": ["fmc"],
+            "UPL": ["upl", "arysta"],
+            "ADAMA": ["adama"],
+            "Nufarm": ["nufarm"],
+            "Sumitomo": ["sumitomo", "sumitomo chemical"],
+            "Koppert": ["koppert"],
+            "Kumiai": ["kumiai", "kumiai chemical"],
+            "Albaugh": ["albaugh"],
+            "Nutrien": ["nutrien"],
+            "Monsanto": ["monsanto"],
+            "Mosaic": ["mosaic"],
+            "Yara": ["yara"],
+            "Valent": ["valent", "valent biosciences", "valent usa"],
+            "Bunge": ["bunge"],
+            "John Deere": ["john deere", "deere"],
+            "Taranis": ["taranis"],
+            "Ourofino": ["ourofino", "오로피누"],
+            "IPL Biologicals": ["ipl biologicals"],
+            "Atul": ["atul"],
+            "IRRI": ["irri"],
+            "Evogene": ["evogene"],
+            "Fraunhofer IME": ["fraunhofer ime"],
+            "ITC": ["itcmaars", "itc"],
+            "Cibus": ["cibus"],
+            "Crop Trust": ["crop trust"],
+            "K+S": ["k+s", "k plus s", "kpluss"],
+            "USDA": ["usda", "nass", "fas"],
+            "FAO": ["fao"],
+            "Nissan Chemical": ["nissan chemical"],
+            "Nihon Nohyaku": ["nihon nohyaku", "nihon-nohyaku"],
+            "Marrone Bio Innovations": ["marrone bio innovations", "mbi"],
+            "PGG Wrightson": ["pgg wrightson", "pggws"],
+            "Belchim Crop Protection": ["belchim crop protection", "belchim"],
+            "Certis": ["certis"],
+            "GreenLight Biosciences": ["greenlight biosciences", "greenlight"],
+            "Ginkgo Bioworks": ["ginkgo bioworks", "ginkgo"],
+            "American Vanguard": ["american vanguard", "america vanguard"],
+            "AMVAC": ["amvac"],
+            "Rovensa": ["rovensa", "rovensa next"],
+            "Bioceres": ["bioceres"],
+            "Biotalys": ["biotalys"],
+            "Gowan": ["gowan"],
+            "Coromandel": ["coromandel", "coromandel international"],
+            "Andermatt": ["andermatt", "andermatt biocontrol"],
+            "AgZen": ["agzen"],
+            "KingAgroot": ["kingagroot"],
+            "Rainbow Chemical": ["rainbow chemical", "rainbow"],
+            "Lier": ["lier", "lier chemical"],
+            "BioLumic": ["biolumic"],
+            "Limin": ["limin", "limin group"],
+            "Nanjing Red Sun": ["nanjing red sun"],
+            "ICL": ["icl"],
+            "KWS": ["kws"],
+            "PI Industries": ["pi industries"],
+            "Dhanuka Agritech": ["dhanuka agritech"],
+            "Lavie Bio": ["lavie bio"],
+            "Helm": ["helm", "helm agro"],
+            "ISK": ["isk"],
+            "Sinochem": ["sinochem"],
+            "CAC Nantong": ["cac nantong"],
+            "Sino-Agri": ["sino-agri", "sino agri"],
+            "Jiangsu Huifeng": ["jiangsu huifeng", "huifeng"],
+            "Plant Health Care": ["plant health care", "phc"],
+            "AgBiTech": ["agbitech"],
+            "AgBiome": ["agbiome"],
+            "Pivot Bio": ["pivot bio"],
+            "Verdesian Life Sciences": ["verdesian life sciences"],
+            "CropX": ["cropx"],
+            "CNH Industrial": ["cnh industrial"],
+            "Novozymes": ["novozymes"],
+            "Novonesis": ["novonesis"],
+            "Mitsui": ["mitsui"],
+            "Mitsubishi": ["mitsubishi"],
+            "Lavoro": ["lavoro"],
+            "Embrapa": ["embrapa"],
+            "ADM": ["adm"],
+            "Viterra": ["viterra"],
+            "Glencore": ["glencore"]
+        };
+        const companyStopNames = new Set([
+            "기타", "Chemical", "Bioscience", "Biosciences", "Biocontrol", "Biostimulant", "Insecticide",
+            "Insecticides", "Investment Group", "Agriculture", "Crop Science", "Farm", "Fork", "Market",
+            "News", "Agrow News", "World", "Global", "Sao Paolo", "Piracicaba", "CRO", "CWRF", "CEV",
+            "AFA", "BDNBC", "BTI", "PAT", "NGT", "RNA", "DNA", "IPM", "GMO", "MRL", "AI"
+        ]);
+        Array.from(companyStopNames).forEach(name => companyStopNames.add(String(name).toLowerCase()));
+        const companyAliases = companyMentionRules;
+        let companyMentionSeedCache = null;
+        let companyAliasCache = new Map();
+        let keywordRegexCache = new Map();
         let currentFilteredData = [];
         const productTypeLabels = {
             insecticide: '살충제',
@@ -847,7 +980,7 @@
             updateFilterSummary('countryFilterSummary', 'countryFilter', '전체 지역');
         }
 
-        function getItemSearchText(item) {
+        function getItemRawText(item) {
             return [
                 item.title,
                 item.body,
@@ -855,8 +988,13 @@
                 item.raw_title,
                 item.raw_body,
                 item.search_keywords,
-                item.company
-            ].filter(Boolean).join(' ').toLowerCase();
+                item.company,
+                item.country
+            ].filter(Boolean).join(' ').replace(/<br\s*\/?>/gi, ' ');
+        }
+
+        function getItemSearchText(item) {
+            return getItemRawText(item).toLowerCase();
         }
 
         function escapeRegExp(value) {
@@ -866,9 +1004,102 @@
         function keywordMatches(searchText, keyword) {
             const normalizedKeyword = keyword.toLowerCase();
             if (/^[a-z0-9 ]+$/.test(normalizedKeyword)) {
-                return new RegExp(`\\b${escapeRegExp(normalizedKeyword)}\\b`).test(searchText);
+                if (!keywordRegexCache.has(normalizedKeyword)) {
+                    keywordRegexCache.set(normalizedKeyword, new RegExp(`\\b${escapeRegExp(normalizedKeyword)}\\b`));
+                }
+                return keywordRegexCache.get(normalizedKeyword).test(searchText);
             }
             return searchText.includes(normalizedKeyword);
+        }
+
+        function normalizeCompanyCandidate(value) {
+            return String(value || '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/社/g, '')
+                .replace(/[“”"‘’]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/^[•\-–—,，:：;；()（）\[\]]+|[•\-–—,，:：;；()（）\[\].]+$/g, '');
+        }
+
+        function getCanonicalCompanyName(value) {
+            const cleaned = normalizeCompanyCandidate(value);
+            if (!cleaned) return '';
+            const lower = cleaned.toLowerCase();
+            if (companyStopNames.has(cleaned) || companyStopNames.has(lower)) return '';
+            if (companyCanonicalOverrides[lower]) return companyCanonicalOverrides[lower];
+
+            const directMatch = Object.keys(companyMentionRules).find(company => company.toLowerCase() === lower);
+            if (directMatch) return directMatch;
+
+            const aliasMatch = Object.entries(companyMentionRules).find(([, aliases]) =>
+                aliases.some(alias => alias.toLowerCase() === lower)
+            );
+            return aliasMatch ? aliasMatch[0] : cleaned;
+        }
+
+        function getCompanyAliases(company) {
+            const canonical = getCanonicalCompanyName(company) || company;
+            if (companyAliasCache.has(canonical)) return companyAliasCache.get(canonical);
+            const aliases = [canonical, ...(companyMentionRules[canonical] || [])]
+                .filter(Boolean)
+                .map(alias => String(alias).toLowerCase());
+            companyAliasCache.set(canonical, Array.from(new Set(aliases)));
+            return companyAliasCache.get(canonical);
+        }
+
+        function extractCompanyNamesEndingWithSa(rawText) {
+            const companies = [];
+            const pattern = /([A-Za-z][A-Za-z0-9&+.'’\-]*(?:\s+[A-Za-z][A-Za-z0-9&+.'’\-]*){0,5})社/g;
+            let match;
+
+            while ((match = pattern.exec(rawText)) !== null) {
+                const canonical = getCanonicalCompanyName(match[1]);
+                if (canonical) companies.push(canonical);
+            }
+
+            return companies;
+        }
+
+        function getCompanyMentionSeedNames() {
+            if (companyMentionSeedCache) return companyMentionSeedCache;
+
+            const seedNames = new Set(Object.keys(companyMentionRules));
+            allDates.forEach(date => {
+                newsDatabase[date].forEach(item => {
+                    const directCompany = getCanonicalCompanyName(item.company);
+                    if (directCompany) seedNames.add(directCompany);
+                    extractCompanyNamesEndingWithSa(getItemRawText(item)).forEach(company => seedNames.add(company));
+                });
+            });
+
+            companyMentionSeedCache = Array.from(seedNames)
+                .filter(Boolean)
+                .sort((a, b) => b.length - a.length || a.localeCompare(b));
+            return companyMentionSeedCache;
+        }
+
+        function extractMentionedCompanies(item) {
+            if (Array.isArray(item._mentionedCompanies)) return item._mentionedCompanies;
+
+            const foundCompanies = new Set();
+            const directCompany = getCanonicalCompanyName(item.company);
+            const rawText = getItemRawText(item);
+            const searchText = rawText.toLowerCase();
+
+            if (directCompany) foundCompanies.add(directCompany);
+
+            extractCompanyNamesEndingWithSa(rawText).forEach(company => foundCompanies.add(company));
+
+            getCompanyMentionSeedNames().forEach(company => {
+                if (!foundCompanies.has(company) && getCompanyAliases(company).some(alias => keywordMatches(searchText, alias))) {
+                    foundCompanies.add(company);
+                }
+            });
+
+            item._mentionedCompanies = Array.from(foundCompanies).sort((a, b) => a.localeCompare(b));
+            return item._mentionedCompanies;
         }
 
         function getProductTypes(item) {
@@ -884,13 +1115,13 @@
             allDates.forEach(date => {
                 yearsSet.add(date.split('-')[0]);
                 newsDatabase[date].forEach(item => {
-                    if(item.company && item.company !== '기타') companiesSet.add(item.company);
+                    extractMentionedCompanies(item).forEach(company => companiesSet.add(company));
                     if(item.country) countriesSet.add(item.country);
                 });
             });
 
             renderCheckboxFilter('yearFilter', 'yearFilter', Array.from(yearsSet).sort().reverse(), year => `${year}년`, 'updateDateDropdown(); applyFilters();');
-            renderCheckboxFilter('companyFilter', 'companyFilter', Array.from(companiesSet).sort(), comp => comp);
+            renderCheckboxFilter('companyFilter', 'companyFilter', Array.from(companiesSet).sort((a, b) => a.localeCompare(b)), comp => comp);
             renderCheckboxFilter('countryFilter', 'countryFilter', Array.from(countriesSet).sort(), country => country);
 
             updateDateDropdown();
@@ -976,7 +1207,8 @@
                 const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(item.tag);
                 const matchProductType = selectedProductTypes.length === 0 || selectedProductTypes.some(type => productTypes.includes(type));
                 const matchCountry = selectedCountries.length === 0 || selectedCountries.includes(item.country);
-                const matchCompany = selectedCompanies.length === 0 || selectedCompanies.some(company => item.company === company || (companyAliases[company] || []).some(alias => searchStr.includes(alias)));
+                const mentionedCompanies = extractMentionedCompanies(item);
+                const matchCompany = selectedCompanies.length === 0 || selectedCompanies.some(company => mentionedCompanies.includes(company));
                 const matchKeyword = keyword === '' || (searchStr + ' ' + productLabelText).includes(keyword);
 
                 return matchCategory && matchProductType && matchCompany && matchCountry && matchKeyword;
