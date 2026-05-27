@@ -6,6 +6,8 @@ const { execFileSync } = require('child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const indexPath = path.join(repoRoot, 'index.html');
 const downloadsPath = '/Users/ziopeno/Downloads/Farmhannong_Agro_Dashboard_FINAL_V32.html';
+const sourcePdfsPath = path.join(repoRoot, 'source-pdfs');
+const downloadsSourcePdfsPath = path.join(path.dirname(downloadsPath), 'source-pdfs');
 const args = new Set(process.argv.slice(2));
 const REQUIRED_WEEKLY_CARD_COUNT = 20;
 
@@ -67,6 +69,11 @@ function maybeSyncDownloads() {
     fs.copyFileSync(indexPath, downloadsPath);
     console.log(`synced downloads copy: ${downloadsPath}`);
   }
+  if (fs.existsSync(sourcePdfsPath)) {
+    fs.rmSync(downloadsSourcePdfsPath, { recursive: true, force: true });
+    fs.cpSync(sourcePdfsPath, downloadsSourcePdfsPath, { recursive: true });
+    console.log(`synced source PDFs: ${downloadsSourcePdfsPath}`);
+  }
 }
 
 function maybeCommitAndPush(expectedWeek) {
@@ -74,7 +81,7 @@ function maybeCommitAndPush(expectedWeek) {
 
   const porcelain = run('git', ['status', '--porcelain']);
   if (porcelain) {
-    run('git', ['add', 'index.html', 'scripts/verify_weekly_deploy.js']);
+    run('git', ['add', 'index.html', 'scripts/verify_weekly_deploy.js', 'scripts/generate_source_pdfs.py', 'source-pdfs']);
     run('git', ['commit', '-m', `Ensure weekly deployment for ${expectedWeek}`], { stdio: ['ignore', 'pipe', 'pipe'] });
   }
 

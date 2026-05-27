@@ -544,6 +544,19 @@
             margin-top: 5px;
             cursor: pointer;
         }
+        .source-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 7px;
+        }
+        .source-action-row a {
+            margin-top: 0;
+        }
+        .source-pdf-link {
+            color: var(--fhn-green) !important;
+        }
         #print-area { display: none; }
         .print-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #cfd8e3; border-radius: 6px; padding: 14px; margin: 0 0 12px 0; }
         .print-title { font-weight: 700; font-size: 13pt; margin-bottom: 8px; color: #1a202c; }
@@ -1384,16 +1397,20 @@
                 card.className = 'card';
                 card.id = 'card-' + index;
                 
-                let sourceHTML = '';
-                if (item.raw_title || item.raw_body) {
-                    // Feature: source details popup for researched articles
-                    sourceHTML = `
-                        <div class="card-source-text">
-                            출처: <strong>${item.source}</strong><br>
-                            <a onclick="openRawTextPopup('${item._date}', ${item._origIdx})">📄 원문 제목/요약/링크 보기</a>
-                        </div>
-                    `;
-                } else {
+	                let sourceHTML = '';
+	                if (item.raw_title || item.raw_body) {
+	                    const sourcePdfPath = getSourcePdfPath(item._date, item._origIdx, item);
+	                    // Feature: source details popup for researched articles
+	                    sourceHTML = `
+	                        <div class="card-source-text">
+	                            출처: <strong>${item.source}</strong><br>
+	                            <div class="source-action-row">
+	                                <a onclick="openRawTextPopup('${item._date}', ${item._origIdx})">📄 원문 제목/요약/링크 보기</a>
+	                                ${sourcePdfPath ? `<a class="source-pdf-link" href="${sourcePdfPath}" target="_blank" download>📥 출처 확인 PDF</a>` : ''}
+	                            </div>
+	                        </div>
+	                    `;
+	                } else {
                     // Fallback to popup for Excel data
                     sourceHTML = `
                         <span class="card-source-link" onclick="openSourcePopup('${item._date}')">기존 Agro weekly 요약 참고</span>
@@ -1435,6 +1452,11 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        function getSourcePdfPath(date, idx, item) {
+            if (!item || !(item.raw_title || item.raw_body || item.search_keywords)) return '';
+            return `source-pdfs/${date}/${String(Number(idx) + 1).padStart(2, '0')}.pdf`;
         }
 
         function getCurrentFilterSummary() {
@@ -1524,27 +1546,33 @@
             title.innerText = `${item.source} - 원문 제목/출처`;
 
             let sourceLinkHtml = '';
-            const originalTitle = item.raw_title || item.title.replace(/^\d+\.\s*/, '');
-            const titleSearchQuery = `"${originalTitle}" ${item.source || ''}`;
-            const titleSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(titleSearchQuery);
-            const sourceSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(`${item.source || ''} ${originalTitle}`);
-            if(item.link) {
-                const isGoogleSearch = item.link.includes('google.com/search');
-                const linkLabel = isGoogleSearch ? '기존 구글 검색 열기' : '출처 사이트 직접 열기';
-                sourceLinkHtml = `
-                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
-                        <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">${linkLabel}</a>
-                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
-                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
-                    </div>
-                    <p style="margin-top: 10px; font-size: 0.85em; color: #718096; margin-bottom: 0;">* 일부 원문 사이트는 외부 직접 접속을 차단해 403/404가 보일 수 있습니다. 그럴 때는 제목 검색 버튼을 사용하면 같은 원문이나 재게시 자료를 찾기 쉽습니다.</p>
-                `;
-            } else {
-                sourceLinkHtml = `
-                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
-                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
-                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
-                    </div>
+	            const originalTitle = item.raw_title || item.title.replace(/^\d+\.\s*/, '');
+	            const titleSearchQuery = `"${originalTitle}" ${item.source || ''}`;
+	            const titleSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(titleSearchQuery);
+	            const sourceSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(`${item.source || ''} ${originalTitle}`);
+	            const sourcePdfPath = getSourcePdfPath(date, idx, item);
+	            const sourcePdfHtml = sourcePdfPath
+	                ? `<a href="${sourcePdfPath}" target="_blank" download style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처 확인용 PDF 다운로드</a>`
+	                : '';
+	            if(item.link) {
+	                const isGoogleSearch = item.link.includes('google.com/search');
+	                const linkLabel = isGoogleSearch ? '기존 구글 검색 열기' : '출처 사이트 직접 열기';
+	                sourceLinkHtml = `
+	                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
+	                        ${sourcePdfHtml}
+	                        <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">${linkLabel}</a>
+	                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
+	                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
+	                    </div>
+	                    <p style="margin-top: 10px; font-size: 0.85em; color: #718096; margin-bottom: 0;">* 일부 원문 사이트는 외부 직접 접속을 차단해 403/404가 보일 수 있습니다. 출처 확인용 PDF에는 당시 확인한 제목, 원 URL, 검색 백업 링크와 요약 정보를 저장했습니다.</p>
+	                `;
+	            } else {
+	                sourceLinkHtml = `
+	                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
+	                        ${sourcePdfHtml}
+	                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
+	                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
+	                    </div>
                 `;
             }
             
