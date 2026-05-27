@@ -557,6 +557,33 @@
         .source-pdf-link {
             color: var(--fhn-green) !important;
         }
+        .raw-source-actions {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .raw-source-button {
+            display: inline-block;
+            padding: 8px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .raw-source-button.pdf { background: var(--fhn-green); }
+        .raw-source-button.direct { background: #2d3748; }
+        .raw-source-notice {
+            margin: 12px 0 0 0;
+            padding: 11px 13px;
+            background: #f8fafc;
+            border-left: 4px solid var(--fhn-green);
+            border-radius: 6px;
+            font-size: 0.86em;
+            color: #4a5568;
+            line-height: 1.55;
+        }
         #print-area { display: none; }
         .print-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #cfd8e3; border-radius: 6px; padding: 14px; margin: 0 0 12px 0; }
         .print-title { font-weight: 700; font-size: 13pt; margin-bottom: 8px; color: #1a202c; }
@@ -1546,49 +1573,21 @@
             title.innerText = `${item.source} - 원문 제목/출처`;
 
             let sourceLinkHtml = '';
-	            const originalTitle = item.raw_title || item.title.replace(/^\d+\.\s*/, '');
-	            const titleSearchQuery = `"${originalTitle}" ${item.source || ''}`;
-	            const titleSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(titleSearchQuery);
-	            const sourceSearchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(`${item.source || ''} ${originalTitle}`);
 	            const sourcePdfPath = getSourcePdfPath(date, idx, item);
 	            const sourcePdfHtml = sourcePdfPath
-	                ? `<a href="${sourcePdfPath}" target="_blank" download style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처 확인용 PDF 다운로드</a>`
+	                ? `<a href="${sourcePdfPath}" target="_blank" download class="raw-source-button pdf">출처 확인용 PDF 다운로드</a>`
 	                : '';
-	            if(item.link) {
-	                const isGoogleSearch = item.link.includes('google.com/search');
-	                const linkLabel = isGoogleSearch ? '기존 구글 검색 열기' : '출처 사이트 직접 열기';
-	                sourceLinkHtml = `
-	                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
-	                        ${sourcePdfHtml}
-	                        <a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">${linkLabel}</a>
-	                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#2d3748; color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
-	                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
-	                    </div>
-	                    <p style="margin-top: 10px; font-size: 0.85em; color: #718096; margin-bottom: 0;">* 일부 원문 사이트는 외부 직접 접속을 차단해 403/404가 보일 수 있습니다. 출처 확인용 PDF에는 당시 확인한 제목, 원 URL, 검색 백업 링크와 요약 정보를 저장했습니다.</p>
-	                `;
-	            } else {
-	                sourceLinkHtml = `
-	                    <div style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
-	                        ${sourcePdfHtml}
-	                        <a href="${titleSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">원문 제목으로 구글 검색</a>
-	                        <a href="${sourceSearchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block; padding:8px 15px; background:#edf2f7; color:#2d3748; border:1px solid #cbd5e0; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">출처명+제목 검색</a>
-	                    </div>
-                `;
-            }
-            
-            let keywordHtml = '';
-            if(item.search_keywords) {
-                const searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(item.search_keywords);
-                keywordHtml = `
-                    <div style="margin-top: 20px; padding: 15px; background: #e6f2e6; border-left: 4px solid #006600; border-radius: 6px;">
-                        <strong style="color: #006600; font-size: 1.05em;">🔍 구글 검색 권장 키워드</strong><br>
-                        <span style="font-family: monospace; color: #2d3748; font-size: 1.1em; display: inline-block; margin-top: 5px; margin-bottom: 10px;">${item.search_keywords}</span>
-                        <br>
-                        <a href="${searchUrl}" target="_blank" style="display:inline-block; padding:8px 15px; background:var(--fhn-green); color:white; text-decoration:none; border-radius:4px; font-weight:bold; font-size:0.9em;">바로 구글 검색하기</a>
-                        <p style="margin-top: 10px; font-size: 0.85em; color: #718096; margin-bottom: 0;">* 버튼을 누르시면 실제 글로벌 뉴스 및 동향을 바로 확인하실 수 있습니다.</p>
+                const hasDirectLink = item.link && !item.link.includes('google.com/search');
+                const directLinkHtml = hasDirectLink
+                    ? `<a href="${escapeHtml(item.link)}" target="_blank" rel="noopener noreferrer" class="raw-source-button direct">출처 사이트 직접 열기</a>`
+                    : '';
+                const actionButtonsHtml = [sourcePdfHtml, directLinkHtml].filter(Boolean).join('');
+                sourceLinkHtml = `
+                    <div class="raw-source-actions">
+                        ${actionButtonsHtml}
                     </div>
+                    <p class="raw-source-notice">* 원문 사이트는 주소 개편·기사 삭제로 404가 뜨거나, 서버/CDN 일시 장애로 503이 뜨거나, 외부 직접 접속·지역/IP·자동화 접근 차단 및 로그인/쿠키 제한 때문에 403이 뜰 수 있습니다. 이런 경우 먼저 출처 확인용 PDF에서 당시 확인한 원문 제목, 출처, URL, 검색 키워드, 요약을 확인하세요. 원문 전문이 꼭 필요하면 PDF에 적힌 제목과 출처명을 복사해 구글이나 해당 사이트 안에서 다시 검색하고, 503 오류는 일시 장애일 수 있으니 잠시 뒤 다시 직접 접속해보는 것이 좋습니다.</p>
                 `;
-            }
 
             body.innerHTML = `
                 <div class="raw-article-box">
@@ -1596,7 +1595,6 @@
                     <div class="raw-article-body">${item.raw_body || ''}</div>
                     ${sourceLinkHtml}
                 </div>
-                ${keywordHtml}
             `;
             
             overlay.style.display = 'flex';
