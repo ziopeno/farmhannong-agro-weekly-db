@@ -4,6 +4,30 @@ Static dashboard for Farmhannong Agro Weekly card news.
 
 Weekly updates must add exactly 20 article cards for the new Monday date key. Use `node scripts/verify_weekly_deploy.js --sync-downloads --expect-current-week` to catch incomplete updates before deployment.
 
+## Server-side Weekly Automation
+
+This repository includes a GitHub Actions workflow at `.github/workflows/weekly-update.yml`.
+
+- Schedule: every Monday 09:00 Korea Standard Time.
+- Runner: GitHub-hosted Ubuntu runner, so the local Mac does not need to be on.
+- Flow: collect agrochemical/agriculture market news, generate exactly 20 Korean card-news items with OpenAI, update `index.html`, generate source evidence PDFs, verify the dashboard, then commit and push to `main`.
+
+Required repository secret:
+
+- `OPENAI_API_KEY`: OpenAI API key used by the weekly generation script.
+
+Optional repository variable:
+
+- `OPENAI_MODEL`: model name. If empty, the script uses `gpt-4.1-mini`.
+
+Manual run:
+
+1. Open the GitHub repository.
+2. Go to `Actions`.
+3. Select `Weekly Agro News Update`.
+4. Click `Run workflow`.
+5. Leave `target_date` blank for the current Monday, or enter a Monday date such as `2026-06-01`.
+
 ## Deployment
 
 This folder is prepared for static hosting.

@@ -10,6 +10,7 @@ const sourcePdfsPath = path.join(repoRoot, 'source-pdfs');
 const downloadsSourcePdfsPath = path.join(path.dirname(downloadsPath), 'source-pdfs');
 const args = new Set(process.argv.slice(2));
 const REQUIRED_WEEKLY_CARD_COUNT = 20;
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 
 function run(command, commandArgs, options = {}) {
   const result = execFileSync(command, commandArgs, {
@@ -105,10 +106,14 @@ function main() {
   maybeCommitAndPush(expectedWeek);
 
   const local = parseDashboard(indexPath, 'local index');
-  const downloads = parseDashboard(downloadsPath, 'downloads copy');
-  ensure(local.latest === downloads.latest, `downloads copy is not synced: local=${local.latest}, downloads=${downloads.latest}`);
   ensure(local.cards === REQUIRED_WEEKLY_CARD_COUNT, `latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${local.latest}, cards=${local.cards}`);
-  ensure(downloads.cards === REQUIRED_WEEKLY_CARD_COUNT, `downloads copy latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${downloads.latest}, cards=${downloads.cards}`);
+  if (fs.existsSync(downloadsPath)) {
+    const downloads = parseDashboard(downloadsPath, 'downloads copy');
+    ensure(local.latest === downloads.latest, `downloads copy is not synced: local=${local.latest}, downloads=${downloads.latest}`);
+    ensure(downloads.cards === REQUIRED_WEEKLY_CARD_COUNT, `downloads copy latest week must contain exactly ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${downloads.latest}, cards=${downloads.cards}`);
+  } else if (!isGitHubActions) {
+    console.warn(`downloads copy not found; skipped local Downloads check: ${downloadsPath}`);
+  }
   ensure(local.latestText === local.latest, `recent update label mismatch: label=${local.latestText}, latest=${local.latest}`);
   if (args.has('--expect-current-week')) {
     ensure(local.latest === expectedWeek, `latest week is not current week: latest=${local.latest}, expected=${expectedWeek}`);

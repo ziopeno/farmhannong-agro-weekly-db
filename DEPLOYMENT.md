@@ -38,3 +38,22 @@ People with the URL can keep using the same URL every week. They do not need a n
 The weekly automation should update `index.html` in this folder with exactly 20 article cards for the new Monday date key, commit the change, and push it to the GitHub repository. The hosting provider will then redeploy the same URL.
 
 Run `node scripts/verify_weekly_deploy.js --sync-downloads --expect-current-week` before deployment. The check fails if the latest week has anything other than 20 cards.
+
+## GitHub Actions Automation
+
+The repository now contains `.github/workflows/weekly-update.yml` for server-side weekly updates.
+
+Schedule:
+
+- Monday 09:00 Korea Standard Time
+- GitHub cron: `0 0 * * 1`
+
+Required setup in GitHub:
+
+1. Open `Settings` -> `Secrets and variables` -> `Actions`.
+2. Add repository secret `OPENAI_API_KEY`.
+3. Optional: add repository variable `OPENAI_MODEL`; leave it empty to use the script default.
+
+After this is set, GitHub runs the weekly updater on its own server. The local Mac and GitHub Desktop do not need to be open.
+
+The workflow can also be run manually from `Actions` -> `Weekly Agro News Update` -> `Run workflow`.

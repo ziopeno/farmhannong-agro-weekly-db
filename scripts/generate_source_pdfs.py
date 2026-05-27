@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import html
 import json
 import re
@@ -160,16 +161,31 @@ def generate_pdf(date_key, index, item, generated_at):
     return target
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Generate source evidence PDFs for researched cards.")
+    parser.add_argument("--date", help="Only generate PDFs for one YYYY-MM-DD date key.")
+    parser.add_argument("--force", action="store_true", help="Regenerate PDFs even when they already exist.")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     db = parse_news_database()
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
     created = []
+    skipped = 0
     for date_key, items in db.items():
+        if args.date and date_key != args.date:
+            continue
         for index, item in enumerate(items):
             if item.get("raw_title") or item.get("raw_body") or item.get("search_keywords"):
+                target = source_pdf_path(date_key, index)
+                if target.exists() and not args.force:
+                    skipped += 1
+                    continue
                 created.append(generate_pdf(date_key, index, item, generated_at))
 
-    print(json.dumps({"created": len(created), "root": str(OUTPUT_ROOT)}, ensure_ascii=False, indent=2))
+    print(json.dumps({"created": len(created), "skipped": skipped, "root": str(OUTPUT_ROOT)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
