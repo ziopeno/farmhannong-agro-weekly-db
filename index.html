@@ -89,21 +89,23 @@
 
         /* Collapsible Filters */
         .filters-panel {
-            width: min(1180px, calc(100vw - 80px));
-            margin-top: 14px;
+            width: calc(100% - 24px);
+            margin: 12px;
+            box-sizing: border-box;
             position: relative;
             z-index: 6;
+            flex: 0 0 auto;
         }
         .filters-panel summary {
             list-style: none;
         }
         .filters-panel summary::-webkit-details-marker { display: none; }
         .filters-panel-trigger {
-            width: fit-content;
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
             padding: 8px 18px;
             border: 1px solid var(--border-color);
-            border-radius: 999px;
+            border-radius: 8px;
             background: #fff;
             color: var(--fhn-green);
             font-weight: 800;
@@ -111,6 +113,7 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             box-shadow: 0 4px 12px rgba(0, 102, 0, 0.08);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
@@ -130,17 +133,17 @@
             transform: rotate(180deg);
         }
         .filters-container {
-            background: rgba(255,255,255,0.26);
-            margin-top: 12px;
-            padding: 18px;
-            border: 1px solid rgba(255,255,255,0.46);
-            border-radius: 12px;
+            background: rgba(255,255,255,0.78);
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid rgba(226,232,240,0.92);
+            border-radius: 8px;
             display: none;
-            gap: 16px;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-            box-shadow: 0 18px 36px rgba(0,0,0,0.12);
+            gap: 10px;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.08);
             backdrop-filter: blur(2px);
             z-index: 5;
         }
@@ -152,7 +155,8 @@
         .filter-group {
             display: flex;
             flex-direction: column;
-            min-width: 200px;
+            min-width: 0;
+            width: 100%;
         }
         .filter-label {
             font-weight: bold;
@@ -212,7 +216,7 @@
             background-size: 1em;
         }
         .filter-select:focus { border-color: var(--fhn-green); }
-        .wide-filter { min-width: 220px; max-width: 320px; }
+        .wide-filter { min-width: 0; max-width: none; }
         .checklist-dropdown {
             position: relative;
             width: 100%;
@@ -231,6 +235,20 @@
             align-items: center;
             position: relative;
         }
+        .checklist-dropdown .filter-label {
+            width: 100%;
+            margin-bottom: 0;
+            padding: 0;
+            background: transparent;
+        }
+        .checklist-dropdown .filter-summary {
+            margin-left: auto;
+            max-width: 122px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: right;
+        }
         .checklist-dropdown summary::-webkit-details-marker { display: none; }
         .checklist-dropdown summary::after {
             content: "⌄";
@@ -246,6 +264,13 @@
             box-shadow: 0 0 0 3px rgba(0,102,0,0.08);
         }
         .checklist-dropdown[open] summary::after { content: "⌃"; }
+        .filter-options-panel {
+            display: none;
+            margin-top: 8px;
+        }
+        .checklist-dropdown[open] .filter-options-panel {
+            display: block;
+        }
         .multi-filter {
             position: static;
             display: flex;
@@ -625,64 +650,6 @@
             <h1 class="header-title-text">🌱 Farmhannong Agro Weekly</h1>
         </div>
 
-        <details class="filters-panel">
-            <summary class="filters-panel-trigger">
-                <span class="filters-panel-open-label">분류/검색 조건 열기</span>
-                <span class="filters-panel-close-label">분류/검색 조건 접기</span>
-                <span class="filters-panel-arrow">⌄</span>
-            </summary>
-            <div class="filters-container">
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">📅 연도 <span class="filter-summary" id="yearFilterSummary">전체 연도</span></span>
-                    <input class="filter-option-search" id="yearFilterSearch" type="search" placeholder="연도 검색..." autocomplete="off" aria-label="연도 항목 검색" oninput="filterChecklistOptions('yearFilter', this.value)">
-                    <div id="yearFilter" class="multi-filter"></div>
-                </div>
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">📆 발행일 <span class="filter-summary" id="dateFilterSummary">전체 발행일</span></span>
-                    <input class="filter-option-search" id="dateFilterSearch" type="search" placeholder="발행일 검색..." autocomplete="off" aria-label="발행일 항목 검색" oninput="filterChecklistOptions('dateFilter', this.value)">
-                    <div id="dateFilter" class="multi-filter"></div>
-                </div>
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">📑 분류 <span class="filter-summary" id="categoryFilterSummary">전체 분류</span></span>
-                    <input class="filter-option-search" id="categoryFilterSearch" type="search" placeholder="분류 검색..." autocomplete="off" aria-label="분류 항목 검색" oninput="filterChecklistOptions('categoryFilter', this.value)">
-                    <div id="categoryFilter" class="multi-filter">
-                        <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="reg" onchange="applyFilters()"><span>등록(REG)</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="dev" onchange="applyFilters()"><span>개발(DEV)</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="sales" onchange="applyFilters()"><span>영업/시장(SALES)</span></label>
-                    </div>
-                </div>
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">🧪 제품군 <span class="filter-summary" id="productTypeFilterSummary">전체 제품군</span></span>
-                    <input class="filter-option-search" id="productTypeFilterSearch" type="search" placeholder="제품군 검색..." autocomplete="off" aria-label="제품군 항목 검색" oninput="filterChecklistOptions('productTypeFilter', this.value)">
-                    <div id="productTypeFilter" class="multi-filter">
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="insecticide" onchange="applyFilters()"><span>살충제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="fungicide" onchange="applyFilters()"><span>살균제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="herbicide" onchange="applyFilters()"><span>제초제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="rodenticide" onchange="applyFilters()"><span>살서제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="adjuvant" onchange="applyFilters()"><span>보조제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="growthRegulator" onchange="applyFilters()"><span>생장조절제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="fertilizer" onchange="applyFilters()"><span>비료</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="seedTrait" onchange="applyFilters()"><span>종자/형질</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="biological" onchange="applyFilters()"><span>생물학제제</span></label>
-                        <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="other" onchange="applyFilters()"><span>기타</span></label>
-                    </div>
-                </div>
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">🏢 기업 <span class="filter-summary" id="companyFilterSummary">전체 기업</span></span>
-                    <input class="filter-option-search" id="companyFilterSearch" type="search" placeholder="기업 검색..." autocomplete="off" aria-label="기업 항목 검색" oninput="filterChecklistOptions('companyFilter', this.value)">
-                    <div id="companyFilter" class="multi-filter"></div>
-                </div>
-                <div class="filter-group wide-filter">
-                    <span class="filter-label">🌍 국가 <span class="filter-summary" id="countryFilterSummary">전체 지역</span></span>
-                    <input class="filter-option-search" id="countryFilterSearch" type="search" placeholder="국가 검색..." autocomplete="off" aria-label="국가 항목 검색" oninput="filterChecklistOptions('countryFilter', this.value)">
-                    <div id="countryFilter" class="multi-filter"></div>
-                </div>
-                <div class="filter-actions">
-                    <button class="reset-btn" onclick="resetAllFilters()">초기화 ↺</button>
-                </div>
-            </div>
-        </details>
-        
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="통합 검색 (키워드 입력)..." onkeyup="applyFilters()">
             <div class="update-info">최근 업데이트: 2026-05-25</div>
@@ -694,6 +661,87 @@
     <div class="main-layout" style="flex-direction: row;">
         <!-- Left Sidebar for Titles -->
         <div class="title-sidebar">
+            <details class="filters-panel">
+                <summary class="filters-panel-trigger">
+                    <span class="filters-panel-open-label">분류/검색 조건 열기</span>
+                    <span class="filters-panel-close-label">분류/검색 조건 접기</span>
+                    <span class="filters-panel-arrow">⌄</span>
+                </summary>
+                <div class="filters-container">
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">📅 연도 <span class="filter-summary" id="yearFilterSummary">전체 연도</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="yearFilterSearch" type="search" placeholder="연도 검색..." autocomplete="off" aria-label="연도 항목 검색" oninput="filterChecklistOptions('yearFilter', this.value)">
+                                <div id="yearFilter" class="multi-filter"></div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">📆 발행일 <span class="filter-summary" id="dateFilterSummary">전체 발행일</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="dateFilterSearch" type="search" placeholder="발행일 검색..." autocomplete="off" aria-label="발행일 항목 검색" oninput="filterChecklistOptions('dateFilter', this.value)">
+                                <div id="dateFilter" class="multi-filter"></div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">📑 분류 <span class="filter-summary" id="categoryFilterSummary">전체 분류</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="categoryFilterSearch" type="search" placeholder="분류 검색..." autocomplete="off" aria-label="분류 항목 검색" oninput="filterChecklistOptions('categoryFilter', this.value)">
+                                <div id="categoryFilter" class="multi-filter">
+                                    <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="reg" onchange="applyFilters()"><span>등록(REG)</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="dev" onchange="applyFilters()"><span>개발(DEV)</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="categoryFilter" value="sales" onchange="applyFilters()"><span>영업/시장(SALES)</span></label>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">🧪 제품군 <span class="filter-summary" id="productTypeFilterSummary">전체 제품군</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="productTypeFilterSearch" type="search" placeholder="제품군 검색..." autocomplete="off" aria-label="제품군 항목 검색" oninput="filterChecklistOptions('productTypeFilter', this.value)">
+                                <div id="productTypeFilter" class="multi-filter">
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="insecticide" onchange="applyFilters()"><span>살충제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="fungicide" onchange="applyFilters()"><span>살균제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="herbicide" onchange="applyFilters()"><span>제초제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="rodenticide" onchange="applyFilters()"><span>살서제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="adjuvant" onchange="applyFilters()"><span>보조제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="growthRegulator" onchange="applyFilters()"><span>생장조절제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="fertilizer" onchange="applyFilters()"><span>비료</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="seedTrait" onchange="applyFilters()"><span>종자/형질</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="biological" onchange="applyFilters()"><span>생물학제제</span></label>
+                                    <label class="filter-chip"><input type="checkbox" name="productTypeFilter" value="other" onchange="applyFilters()"><span>기타</span></label>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">🏢 기업 <span class="filter-summary" id="companyFilterSummary">전체 기업</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="companyFilterSearch" type="search" placeholder="기업 검색..." autocomplete="off" aria-label="기업 항목 검색" oninput="filterChecklistOptions('companyFilter', this.value)">
+                                <div id="companyFilter" class="multi-filter"></div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-group wide-filter">
+                        <details class="checklist-dropdown">
+                            <summary><span class="filter-label">🌍 국가 <span class="filter-summary" id="countryFilterSummary">전체 지역</span></span></summary>
+                            <div class="filter-options-panel">
+                                <input class="filter-option-search" id="countryFilterSearch" type="search" placeholder="국가 검색..." autocomplete="off" aria-label="국가 항목 검색" oninput="filterChecklistOptions('countryFilter', this.value)">
+                                <div id="countryFilter" class="multi-filter"></div>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="reset-btn" onclick="resetAllFilters()">초기화 ↺</button>
+                    </div>
+                </div>
+            </details>
             <div class="title-sidebar-header">
                 📋 필터링된 기사 목록 (<span id="resultCount">0</span>건)
             </div>
