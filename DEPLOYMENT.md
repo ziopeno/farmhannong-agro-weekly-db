@@ -61,3 +61,7 @@ After this is set, GitHub runs the weekly updater on its own server. The local M
 The workflow can also be run manually from `Actions` -> `Weekly Agro News Update` -> `Run workflow`.
 
 For Gmail SMTP, use `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and an app password as `SMTP_PASSWORD`. Do not put email passwords inside `index.html`.
+
+The site subscription popup is a safe request flow: visitors enter an email address, then their mail app opens a prefilled request to the administrator. The administrator must add approved addresses to `SUMMARY_EMAIL_RECIPIENTS`. The public static page must not contain a GitHub token or SMTP password.
+
+Weekly emails use the subject `Ageo weekly 공유 ('YYYY-MM-DD')`, start with `금주의 Agro weekly를 공유드리오니 업무에 참고 부탁드립니다.`, include a JPG summary in the email body, and attach the full card-news PDF.

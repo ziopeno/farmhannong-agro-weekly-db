@@ -11,6 +11,7 @@ This repository includes a GitHub Actions workflow at `.github/workflows/weekly-
 - Schedule: every Monday 09:00 Korea Standard Time.
 - Runner: GitHub-hosted Ubuntu runner, so the local Mac does not need to be on.
 - Flow: collect agrochemical/agriculture market news, generate exactly 20 Korean card-news items with OpenAI, update `index.html`, generate source evidence PDFs, verify the dashboard, then commit and push to `main`.
+- Email flow: send the latest weekly briefing to configured recipients with a card-news PDF attachment and an inline JPG summary in the email body.
 
 Required repository secret:
 
@@ -31,6 +32,8 @@ Optional repository secrets for weekly summary email:
 - `SMTP_FROM`
 
 If email recipients or SMTP settings are empty, the weekly update still runs and email sending is skipped.
+
+The public `구독하기` button opens an email subscription request to the administrator. For privacy and security, the static site does not write email addresses directly into GitHub Actions. Approved addresses should be added by an administrator to `SUMMARY_EMAIL_RECIPIENTS`.
 
 Manual run:
 

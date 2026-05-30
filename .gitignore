@@ -1,3 +1,4 @@
 *.backup-before-*.html
 Farmhannong_Agro_Dashboard_FINAL_V32.backup-*.html
 .DS_Store
+weekly-email-output/
