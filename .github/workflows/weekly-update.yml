@@ -31,6 +31,13 @@ jobs:
       OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
       TARGET_DATE: ${{ inputs.target_date }}
       REPLACE_EXISTING: ${{ inputs.replace_existing }}
+      SUMMARY_EMAIL_RECIPIENTS: ${{ vars.SUMMARY_EMAIL_RECIPIENTS }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
+      SITE_URL: ${{ vars.SITE_URL }}
 
     steps:
       - name: Checkout repository
@@ -101,3 +108,6 @@ jobs:
           week="$(python -c 'import pathlib, re; text = pathlib.Path("index.html").read_text(encoding="utf-8"); print(re.search(r"최근 업데이트: ([^<]+)", text).group(1))')"
           git commit -m "Add weekly cards for ${week}"
           git push origin main
+
+      - name: Send weekly summary email
+        run: python scripts/send_weekly_summary_email.py

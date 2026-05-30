@@ -688,7 +688,7 @@
         </div>
 
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="통합 검색 (키워드 입력)..." onkeyup="applyFilters()">
+            <input type="text" id="searchInput" placeholder="통합 검색 (키워드 입력)..." oninput="scheduleApplyFilters()">
             <div class="update-info">최근 업데이트: 2026-05-25</div>
             <div class="next-update-info">다음 업데이트 예정: 2026-06-01 09:00 (KST)</div>
             <button class="reset-btn export-btn search-export-btn" onclick="printCurrentResults()">현재 결과값 출력</button>
@@ -698,7 +698,7 @@
     <div class="main-layout" style="flex-direction: row;">
         <!-- Left Sidebar for Titles -->
         <div class="title-sidebar">
-            <details class="filters-panel" ontoggle="hydrateFullFilterOptions()">
+            <details class="filters-panel">
                 <summary class="filters-panel-trigger">
                     <span class="filters-panel-open-label">분류/검색 조건 열기</span>
                     <span class="filters-panel-close-label">분류/검색 조건 접기</span>
@@ -757,7 +757,7 @@
                         </details>
                     </div>
                     <div class="filter-group wide-filter">
-                        <details class="checklist-dropdown">
+                        <details class="checklist-dropdown" ontoggle="hydrateCompanyFilterOptions(this)">
                             <summary><span class="filter-label">🏢 기업 <span class="filter-summary" id="companyFilterSummary">전체 기업</span></span></summary>
                             <div class="filter-options-panel">
                                 <input class="filter-option-search" id="companyFilterSearch" type="search" placeholder="기업 검색..." autocomplete="off" aria-label="기업 항목 검색" oninput="filterChecklistOptions('companyFilter', this.value)">
@@ -766,7 +766,7 @@
                         </details>
                     </div>
                     <div class="filter-group wide-filter">
-                        <details class="checklist-dropdown">
+                        <details class="checklist-dropdown" ontoggle="hydrateCountryFilterOptions(this)">
                             <summary><span class="filter-label">🌍 국가 <span class="filter-summary" id="countryFilterSummary">전체 지역</span></span></summary>
                             <div class="filter-options-panel">
                                 <input class="filter-option-search" id="countryFilterSearch" type="search" placeholder="국가 검색..." autocomplete="off" aria-label="국가 항목 검색" oninput="filterChecklistOptions('countryFilter', this.value)">
@@ -829,7 +829,6 @@
         let yearsSet = new Set();
         let companiesSet = new Set();
         let countriesSet = new Set();
-        let fullFilterOptionsHydrated = false;
         const companyCanonicalOverrides = {
             "팜한농": "Farmhannong",
             "farm hannong": "Farmhannong",
@@ -967,6 +966,9 @@
         let companyAliasCache = new Map();
         let keywordRegexCache = new Map();
         let currentFilteredData = [];
+        let filterRenderTimer = null;
+        let companyFilterOptionsHydrated = false;
+        let countryFilterOptionsHydrated = false;
         const productTypeLabels = {
             insecticide: '살충제',
             fungicide: '살균제',
@@ -1014,7 +1016,7 @@
 
             chips.forEach(chip => {
                 const input = chip.querySelector('input');
-                const optionText = normalizeFilterOptionText(`${chip.innerText || ''} ${input?.value || ''}`);
+                const optionText = chip.dataset.filterText || normalizeFilterOptionText(`${chip.innerText || ''} ${input?.value || ''}`);
                 const matches = !query || optionText.includes(query);
                 chip.classList.toggle('is-option-hidden', !matches);
                 if (matches) visibleCount += 1;
@@ -1049,6 +1051,7 @@
                 const label = document.createElement('label');
                 label.className = 'filter-chip';
                 label.innerHTML = `<input type="checkbox" name="${inputName}" value="${escapeHtml(value)}" onchange="${onChangeHandler}"><span>${escapeHtml(labelFormatter(value))}</span>`;
+                label.dataset.filterText = normalizeFilterOptionText(`${labelFormatter(value)} ${value}`);
                 container.appendChild(label);
             });
             filterChecklistOptions(containerId);
@@ -1132,6 +1135,11 @@
             container.innerHTML = tags.length ? `<span class="active-filters-label">적용된 조건</span>${tags.join('')}` : '';
         }
 
+        function scheduleApplyFilters() {
+            clearTimeout(filterRenderTimer);
+            filterRenderTimer = setTimeout(applyFilters, 180);
+        }
+
         function updateFilterSummary(summaryId, inputName, fallbackText) {
             const summary = document.getElementById(summaryId);
             if (!summary) return;
@@ -1155,7 +1163,8 @@
         }
 
         function getItemRawText(item) {
-            return [
+            if (item._rawText) return item._rawText;
+            item._rawText = [
                 item.title,
                 item.body,
                 item.source,
@@ -1165,10 +1174,12 @@
                 item.company,
                 item.country
             ].filter(Boolean).join(' ').replace(/<br\s*\/?>/gi, ' ');
+            return item._rawText;
         }
 
         function getItemSearchText(item) {
-            return getItemRawText(item).toLowerCase();
+            if (!item._searchText) item._searchText = getItemRawText(item).toLowerCase();
+            return item._searchText;
         }
 
         function escapeRegExp(value) {
@@ -1277,11 +1288,14 @@
         }
 
         function getProductTypes(item) {
+            if (Array.isArray(item._productTypes)) return item._productTypes;
             const searchText = getItemSearchText(item);
             const matches = Object.keys(productTypeRules).filter(type =>
                 productTypeRules[type].some(keyword => keywordMatches(searchText, keyword))
             );
-            return matches.length ? matches : ['other'];
+            item._productTypes = matches.length ? matches : ['other'];
+            item._productLabelText = item._productTypes.map(type => productTypeLabels[type]).join(' ').toLowerCase();
+            return item._productTypes;
         }
 
         function initApp() {
@@ -1305,25 +1319,37 @@
             applyFilters();
         }
 
-        function hydrateFullFilterOptions() {
-            const panel = document.querySelector('.filters-panel');
-            if (!panel?.open || fullFilterOptionsHydrated) return;
+        function hydrateCompanyFilterOptions(detailsElement) {
+            if (!detailsElement?.open || companyFilterOptionsHydrated) return;
 
             const selectedCompanies = new Set(getCheckedValues('companyFilter'));
-            const selectedCountries = new Set(getCheckedValues('countryFilter'));
             allDates.forEach(date => {
                 newsDatabase[date].forEach(item => {
                     extractMentionedCompanies(item).forEach(company => companiesSet.add(company));
-                    if(item.country) countriesSet.add(item.country);
                 });
             });
-            fullFilterOptionsHydrated = true;
+            companyFilterOptionsHydrated = true;
 
             renderCheckboxFilter('companyFilter', 'companyFilter', Array.from(companiesSet).sort((a, b) => a.localeCompare(b)), comp => comp);
-            renderCheckboxFilter('countryFilter', 'countryFilter', Array.from(countriesSet).sort(), country => country);
             document.querySelectorAll('input[name="companyFilter"]').forEach(input => {
                 input.checked = selectedCompanies.has(input.value);
             });
+            applyAllChecklistSearches();
+            updateFilterSummaries();
+        }
+
+        function hydrateCountryFilterOptions(detailsElement) {
+            if (!detailsElement?.open || countryFilterOptionsHydrated) return;
+
+            const selectedCountries = new Set(getCheckedValues('countryFilter'));
+            allDates.forEach(date => {
+                newsDatabase[date].forEach(item => {
+                    if(item.country) countriesSet.add(item.country);
+                });
+            });
+            countryFilterOptionsHydrated = true;
+
+            renderCheckboxFilter('countryFilter', 'countryFilter', Array.from(countriesSet).sort(), country => country);
             document.querySelectorAll('input[name="countryFilter"]').forEach(input => {
                 input.checked = selectedCountries.has(input.value);
             });
@@ -1397,23 +1423,24 @@
             const keyword = document.getElementById('searchInput').value.toLowerCase();
             
             let dataToRender = [];
-            
-            allDates.forEach(date => {
+            const dateCandidates = selectedDates.length
+                ? selectedDates.filter(date => newsDatabase[date])
+                : allDates.filter(date => selectedYears.length === 0 || selectedYears.includes(date.split('-')[0]));
+
+            dateCandidates.forEach(date => {
                 if (selectedYears.length > 0 && !selectedYears.includes(date.split('-')[0])) return;
-                if (selectedDates.length > 0 && !selectedDates.includes(date)) return;
                 
                 newsDatabase[date].forEach((item, idx) => {
-                    let i = Object.assign({_date: date, _origIdx: idx}, item);
-                    dataToRender.push(i);
+                    item._date = date;
+                    item._origIdx = idx;
+                    dataToRender.push(item);
                 });
             });
 
             const filteredData = dataToRender.filter(item => {
                 const searchStr = getItemSearchText(item);
                 const productTypes = getProductTypes(item);
-                const productLabelText = productTypes.map(type => productTypeLabels[type]).join(' ').toLowerCase();
-                item._productTypes = productTypes;
-                item._productLabelText = productLabelText;
+                const productLabelText = item._productLabelText || productTypes.map(type => productTypeLabels[type]).join(' ').toLowerCase();
 
                 const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(item.tag);
                 const matchProductType = selectedProductTypes.length === 0 || selectedProductTypes.some(type => productTypes.includes(type));
@@ -1433,6 +1460,8 @@
                 return;
             }
 
+            const titleItemsHtml = [];
+            const cardsHtml = [];
             filteredData.forEach((item, index) => {
                 let typeName = '';
                 if(item.tag === 'reg') typeName = '등록(REG)';
@@ -1445,18 +1474,8 @@
                     </div>
                 `;
 
-                // Build sidebar title item
-                const titleLi = document.createElement('li');
-                titleLi.className = 'title-item';
-                titleLi.innerText = item.title;
-                titleLi.onclick = () => scrollToCard(index);
-                titleList.appendChild(titleLi);
+                titleItemsHtml.push(`<li class="title-item" onclick="scrollToCard(${index})">${escapeHtml(item.title)}</li>`);
 
-                // Build Card
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.id = 'card-' + index;
-                
 	                let sourceHTML = '';
 	                if (item.raw_title || item.raw_body) {
 	                    // Feature: source details popup for researched articles
@@ -1475,7 +1494,8 @@
                     `;
                 }
 
-                card.innerHTML = `
+                cardsHtml.push(`
+                    <div class="card" id="card-${index}">
                     <div class="card-header">
                         <span class="card-type type-${item.tag}">${typeName}</span>
                         <div class="card-meta">
@@ -1491,9 +1511,11 @@
                     <div class="card-footer">
                         ${sourceHTML}
                     </div>
-                `;
-                grid.appendChild(card);
+                    </div>
+                `);
             });
+            titleList.innerHTML = titleItemsHtml.join('');
+            grid.innerHTML = cardsHtml.join('');
         }
 
         function getCategoryLabel(tag) {

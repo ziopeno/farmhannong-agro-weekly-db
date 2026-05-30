@@ -19,6 +19,18 @@ Required repository secret:
 Optional repository variable:
 
 - `OPENAI_MODEL`: model name. If empty, the script uses `gpt-4.1-mini`.
+- `SUMMARY_EMAIL_RECIPIENTS`: optional admin-only comma-separated email recipient list for weekly summary emails.
+- `SITE_URL`: optional public site URL used in summary emails.
+
+Optional repository secrets for weekly summary email:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_FROM`
+
+If email recipients or SMTP settings are empty, the weekly update still runs and email sending is skipped.
 
 Manual run:
 
