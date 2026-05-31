@@ -15,6 +15,10 @@ on:
         required: false
         default: false
         type: boolean
+      email_recipients_override:
+        description: "Optional one-time comma-separated recipients for a manual test email. Leave blank to use SUMMARY_EMAIL_RECIPIENTS."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -31,7 +35,7 @@ jobs:
       OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
       TARGET_DATE: ${{ inputs.target_date }}
       REPLACE_EXISTING: ${{ inputs.replace_existing }}
-      SUMMARY_EMAIL_RECIPIENTS: ${{ vars.SUMMARY_EMAIL_RECIPIENTS }}
+      SUMMARY_EMAIL_RECIPIENTS: ${{ inputs.email_recipients_override || vars.SUMMARY_EMAIL_RECIPIENTS }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
