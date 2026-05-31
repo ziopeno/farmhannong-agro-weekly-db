@@ -329,7 +329,7 @@ def build_messages(latest, cards, image_cid):
 
 def configured_smtp():
     smtp_host = os.getenv("SMTP_HOST", "")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_port = int(os.getenv("SMTP_PORT") or "587")
     smtp_user = os.getenv("SMTP_USERNAME", "")
     smtp_password = os.getenv("SMTP_PASSWORD", "")
     smtp_from = os.getenv("SMTP_FROM") or smtp_user
