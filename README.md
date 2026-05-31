@@ -33,21 +33,7 @@ Optional repository secrets for weekly summary email:
 
 If email recipients or SMTP settings are empty, the weekly update still runs and email sending is skipped.
 
-The public `구독하기` button can send a subscription request to an approval endpoint. The approval endpoint emails the administrator, and the administrator approval link adds the address to `SUMMARY_EMAIL_RECIPIENTS`. For privacy and security, the public static page must not contain a GitHub token or SMTP password.
-
-## Subscription Approval Setup
-
-The approval endpoint is implemented as a Google Apps Script template at `scripts/subscription_approval_apps_script.js`.
-
-1. Create a fine-grained GitHub token that can read and write repository Actions variables for `ziopeno/farmhannong-agro-weekly-db`.
-2. Create a Google Apps Script project and paste the contents of `scripts/subscription_approval_apps_script.js`.
-3. In Apps Script, open `Project Settings` -> `Script properties` and add `GITHUB_TOKEN` with the GitHub token value.
-4. Deploy the Apps Script project as a web app with access set to `Anyone`.
-5. Copy the web app URL and put it in `index.html` as `subscriptionApprovalEndpoint`.
-
-After this setup, visitors enter only their email address. The administrator receives an approval email at `ziopeno@gmail.com`; clicking `구독 승인하기` automatically updates the repository variable `SUMMARY_EMAIL_RECIPIENTS`.
-
-If `subscriptionApprovalEndpoint` is empty, the site keeps the older fallback behavior and opens a prefilled email request to the administrator.
+Weekly email recipients are managed only by the administrator through the private GitHub Actions repository variable `SUMMARY_EMAIL_RECIPIENTS`. Keep recipient addresses out of public repository files such as `index.html` and `README.md`.
 
 Manual run:
 
