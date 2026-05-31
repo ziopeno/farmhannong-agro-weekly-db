@@ -376,6 +376,10 @@
             background: var(--fhn-green);
         }
         .subscribe-btn:hover { background: #004d00; }
+        .subscribe-btn:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
 
         .search-container {
             position: absolute;
@@ -694,6 +698,7 @@
             color: var(--fhn-green);
             font-weight: 700;
         }
+        .subscribe-status.error { color: #c53030; }
         .popup-item {
             margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #edf2f7;
         }
@@ -875,11 +880,11 @@
                 <button class="close-popup" onclick="closePopup(null, 'subscribe-popup-overlay')">&times;</button>
             </div>
             <div class="popup-body subscribe-body">
-                <p>메일 주소를 입력하면 구독 요청 메일이 열립니다. 관리자가 승인한 주소는 매주 자동 업데이트 후 카드뉴스 PDF와 요약 JPG를 메일로 받습니다.</p>
+                <p>메일 주소를 입력하면 관리자에게 승인 요청이 전송됩니다. 관리자가 메일에 있는 승인 버튼을 누르면 매주 자동 업데이트 후 카드뉴스 PDF와 요약 JPG를 메일로 받습니다.</p>
                 <input type="email" id="subscribeEmailInput" placeholder="메일 주소 입력" autocomplete="email">
                 <div class="subscribe-actions">
                     <button class="reset-btn subscribe-secondary-btn" onclick="closePopup(null, 'subscribe-popup-overlay')">닫기</button>
-                    <button class="reset-btn subscribe-btn" onclick="submitSubscriptionRequest()">구독 요청 보내기</button>
+                    <button class="reset-btn subscribe-btn" id="subscribeSubmitButton" onclick="submitSubscriptionRequest()">구독 요청 보내기</button>
                 </div>
                 <div class="subscribe-status" id="subscribeStatus"></div>
             </div>
@@ -891,6 +896,7 @@
         let allDates = Object.keys(newsDatabase).sort().reverse();
         const latestDate = allDates[0] || '';
         const subscriptionRequestEmail = 'ziopeno@gmail.com';
+        const subscriptionApprovalEndpoint = '';
         let yearsSet = new Set();
         let companiesSet = new Set();
         let countriesSet = new Set();
@@ -1730,29 +1736,66 @@
             overlay.style.display = 'flex';
         }
 
-        function submitSubscriptionRequest() {
+        async function submitSubscriptionRequest() {
             const input = document.getElementById('subscribeEmailInput');
             const status = document.getElementById('subscribeStatus');
+            const submitButton = document.getElementById('subscribeSubmitButton');
             const email = (input?.value || '').trim();
             const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+            status?.classList.remove('error');
             if (!isValidEmail) {
+                status?.classList.add('error');
                 if (status) status.innerText = '메일 주소를 다시 확인해주세요.';
                 input?.focus();
                 return;
             }
 
             localStorage.setItem('agroWeeklySubscriptionEmail', email);
+
+            if (!subscriptionApprovalEndpoint) {
+                openSubscriptionRequestMail(email, status);
+                return;
+            }
+
+            if (submitButton) submitButton.disabled = true;
+            if (status) status.innerText = '구독 승인 요청을 전송하고 있습니다.';
+
+            try {
+                await fetch(subscriptionApprovalEndpoint, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        email,
+                        latestDate,
+                        sourceUrl: window.location.href,
+                        requestedAt: new Date().toISOString()
+                    })
+                });
+                if (status) status.innerText = '구독 요청을 보냈습니다. 관리자가 승인하면 자동발송 목록에 추가됩니다.';
+            } catch (error) {
+                console.error('Subscription request failed:', error);
+                status?.classList.add('error');
+                if (status) status.innerText = '자동 요청 전송에 실패해 메일 요청 방식으로 전환합니다.';
+                openSubscriptionRequestMail(email, status);
+            } finally {
+                if (submitButton) submitButton.disabled = false;
+            }
+        }
+
+        function openSubscriptionRequestMail(email, status) {
             if (status) status.innerText = '구독 요청 메일을 열고 있습니다.';
 
             const subject = encodeURIComponent('Farmhannong Agro Weekly 구독 요청');
             const body = encodeURIComponent([
-                '아래 이메일 주소를 Farmhannong Agro Weekly 자동발송 수신자에 추가해주세요.',
+                '아래 이메일 주소를 Farmhannong Agro Weekly 자동발송 수신자에 승인해주세요.',
                 '',
                 `구독 이메일: ${email}`,
                 `신청 기준 주차: ${latestDate}`,
                 '',
-                '관리자 설정 위치: GitHub 저장소 > Settings > Secrets and variables > Actions > Variables > SUMMARY_EMAIL_RECIPIENTS'
+                '승인 자동화가 설정되어 있으면 관리자 메일의 승인 버튼을 사용해주세요.',
+                '수동 설정 위치: GitHub 저장소 > Settings > Secrets and variables > Actions > Variables > SUMMARY_EMAIL_RECIPIENTS'
             ].join('\n'));
             window.location.href = `mailto:${subscriptionRequestEmail}?subject=${subject}&body=${body}`;
         }

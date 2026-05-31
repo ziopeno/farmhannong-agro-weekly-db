@@ -62,6 +62,15 @@ The workflow can also be run manually from `Actions` -> `Weekly Agro News Update
 
 For Gmail SMTP, use `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and an app password as `SMTP_PASSWORD`. Do not put email passwords inside `index.html`.
 
-The site subscription popup is a safe request flow: visitors enter an email address, then their mail app opens a prefilled request to the administrator. The administrator must add approved addresses to `SUMMARY_EMAIL_RECIPIENTS`. The public static page must not contain a GitHub token or SMTP password.
+The site subscription popup is a safe request flow: visitors enter an email address, then the site sends the request to the configured approval endpoint. The endpoint emails the administrator an approval link. When the administrator clicks the link, the endpoint updates `SUMMARY_EMAIL_RECIPIENTS` in GitHub. The public static page must not contain a GitHub token or SMTP password.
+
+Subscription approval setup:
+
+1. Copy `scripts/subscription_approval_apps_script.js` into a Google Apps Script project.
+2. Add Script property `GITHUB_TOKEN` with a fine-grained GitHub token that can read and write repository Actions variables.
+3. Deploy the script as a web app with access set to `Anyone`.
+4. Paste the deployed web app URL into `index.html` as `subscriptionApprovalEndpoint`.
+
+If `subscriptionApprovalEndpoint` is left empty, the popup falls back to opening a prefilled request email to the administrator.
 
 Weekly emails use the subject `Ageo weekly 공유 ('YYYY-MM-DD')`, start with `금주의 Agro weekly를 공유드리오니 업무에 참고 부탁드립니다.`, include a JPG summary in the email body, and attach the full card-news PDF.
