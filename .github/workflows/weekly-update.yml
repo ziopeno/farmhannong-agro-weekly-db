@@ -112,5 +112,19 @@ jobs:
           git commit -m "Add weekly cards for ${week}"
           git push origin main
 
+      - name: Verify GitHub and public site are updated
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          for attempt in {1..18}; do
+            if node scripts/verify_weekly_deploy.js --expect-current-week --check-pages; then
+              exit 0
+            fi
+            echo "GitHub Pages is not showing the latest update yet. Retrying ${attempt}/18..."
+            sleep 20
+          done
+          node scripts/verify_weekly_deploy.js --expect-current-week --check-pages
+
       - name: Send weekly summary email
         run: python scripts/send_weekly_summary_email.py
