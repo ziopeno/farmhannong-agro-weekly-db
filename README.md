@@ -31,7 +31,7 @@ Optional repository secrets for weekly summary email:
 - `SMTP_PASSWORD`
 - `SMTP_FROM`
 
-If email recipients or SMTP settings are empty, the weekly update still runs and email sending is skipped.
+If email recipients are empty, the weekly update runs without sending email. If recipients are configured but SMTP settings are missing, the workflow fails so the administrator can fix email delivery.
 
 Weekly email recipients are managed only by the administrator through the private GitHub Actions repository variable `SUMMARY_EMAIL_RECIPIENTS`. Keep recipient addresses out of public repository files such as `index.html` and `README.md`.
 

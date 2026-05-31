@@ -54,7 +54,7 @@ Required setup in GitHub:
 2. Add repository secret `OPENAI_API_KEY`.
 3. Optional: add repository variable `OPENAI_MODEL`; leave it empty to use the script default.
 4. Optional email recipients: add repository variable `SUMMARY_EMAIL_RECIPIENTS` with comma-separated addresses. This is the admin-only place to edit recipients.
-5. Optional email SMTP secrets: add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SMTP_FROM`.
+5. Optional email SMTP secrets: add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SMTP_FROM`. `SMTP_PORT` can be left empty to use `587`.
 
 After this is set, GitHub runs the weekly updater on its own server. The local Mac and GitHub Desktop do not need to be open.
 
