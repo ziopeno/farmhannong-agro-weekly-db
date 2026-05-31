@@ -364,8 +364,7 @@ def main():
         if not value
     ]
     if missing:
-        print(f"SMTP is not fully configured; skipped weekly summary email. Missing: {', '.join(missing)}")
-        return
+        raise SystemExit(f"SMTP is not fully configured; cannot send weekly summary email. Missing: {', '.join(missing)}")
 
     pdf_path, jpg_path = generate_weekly_assets(latest, cards)
     image_cid = make_msgid(domain="farmhannong-agro-weekly")
