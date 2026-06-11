@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16763f"/>
+      <stop offset="1" stop-color="#34a853"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e6f7ea"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  <!-- 주간 흐름을 상징하는 웨이브 리본 (앱 헤더와 동일 모티프) -->
+  <path d="M20 138 Q55 122 90 138 T160 138" fill="none" stroke="#ffffff" stroke-opacity="0.20" stroke-width="8" stroke-linecap="round"/>
+  <path d="M20 150 Q55 136 90 150 T160 150" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="6" stroke-linecap="round"/>
+  <!-- 새싹 줄기 -->
+  <path d="M90 140 C90 116 90 100 90 80" fill="none" stroke="#f4fbf5" stroke-width="9" stroke-linecap="round"/>
+  <!-- 왼쪽 잎 -->
+  <path d="M90 104 C68 106 52 96 46 70 C72 66 90 78 90 104 Z" fill="url(#leaf)"/>
+  <!-- 오른쪽 잎 -->
+  <path d="M90 92 C112 92 130 80 136 52 C108 50 90 64 90 92 Z" fill="#ffffff"/>
+  <!-- 잎맥 -->
+  <path d="M62 86 Q78 86 88 100" fill="none" stroke="#a9dcb8" stroke-width="3" stroke-linecap="round"/>
+  <path d="M120 70 Q104 72 92 88" fill="none" stroke="#bfe6c9" stroke-width="3" stroke-linecap="round"/>
+</svg>

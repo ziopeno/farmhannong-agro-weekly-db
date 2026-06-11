@@ -1,0 +1,17 @@
+{
+  "name": "Farmhannong Agro Weekly",
+  "short_name": "Agro Weekly",
+  "description": "팜한농 해외 농약·작물보호 주간 카드뉴스 (사내 전용)",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef6ef",
+  "theme_color": "#16763f",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
