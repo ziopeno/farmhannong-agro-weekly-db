@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Farmhannong Agro Weekly</title>
+<style>
+  :root { --fhn-green: #15663f; --fhn-green-bright: #2f9e44; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+    background: linear-gradient(150deg, #eef6ef 0%, #dcecdf 45%, #cfe5d6 100%);
+    padding: 20px;
+  }
+  .gate {
+    width: 100%; max-width: 420px; background: #fff; border-radius: 22px;
+    box-shadow: 0 18px 50px rgba(21,102,63,0.16); padding: 40px 36px; text-align: center;
+  }
+  .logo { font-size: 2.2em; }
+  h1 { font-size: 1.32em; color: var(--fhn-green); margin: 12px 0 6px; letter-spacing: -0.01em; }
+  .sub { font-size: 0.86em; color: #6f8077; line-height: 1.65; margin-bottom: 26px; }
+  .row { display: flex; gap: 8px; }
+  input {
+    flex: 1; padding: 13px 16px; border: 1.6px solid #d7e3da; border-radius: 12px;
+    font-size: 0.95em; outline: none; letter-spacing: 0.04em;
+  }
+  input:focus { border-color: var(--fhn-green-bright); }
+  button {
+    padding: 13px 22px; border: none; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(135deg, var(--fhn-green) 0%, var(--fhn-green-bright) 100%);
+    color: #fff; font-size: 0.95em; font-weight: 700;
+  }
+  button:disabled { opacity: 0.55; cursor: default; }
+  .msg { min-height: 1.3em; margin-top: 14px; font-size: 0.84em; color: #c0392b; }
+  .msg.ok { color: var(--fhn-green); }
+  .note { margin-top: 22px; font-size: 0.76em; color: #93a39a; line-height: 1.7; }
+</style>
+</head>
+<body>
+  <div class="gate">
+    <div class="logo">🌱</div>
+    <h1>Farmhannong Agro Weekly</h1>
+    <p class="sub">사내 전용 페이지입니다.<br>관리자에게 부여받은 <b>개인 입장 코드</b>를 입력해주세요.</p>
+    <div class="row">
+      <input type="password" id="codeInput" placeholder="입장 코드" autocomplete="off" autofocus>
+      <button id="enterBtn">입장</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <p class="note">코드가 확인되면 이 브라우저에서는 다시 묻지 않습니다.<br>코드가 없거나 잊으셨다면 관리자에게 문의해주세요.</p>
+  </div>
+<script>
+(function () {
+  'use strict';
+  var KEY_STORE = 'fhn_site_key';
+  var enc = new TextEncoder();
+  var payloadPromise = fetch('payload.enc', { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error('payload fetch ' + r.status);
+    return r.json();
+  });
+
+  function b64ToBuf(b64) {
+    var bin = atob(b64), buf = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf;
+  }
+  function bufToB64(buf) {
+    var bytes = new Uint8Array(buf), bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function deriveKey(code, saltBuf) {
+    return crypto.subtle.importKey('raw', enc.encode(code.normalize('NFKC')), 'PBKDF2', false, ['deriveKey'])
+      .then(function (base) {
+        return crypto.subtle.deriveKey(
+          { name: 'PBKDF2', hash: 'SHA-256', salt: saltBuf, iterations: 150000 },
+          base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      });
+  }
+  function gcmDecrypt(key, ivB64, ctB64) {
+    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBuf(ivB64) }, key, b64ToBuf(ctB64));
+  }
+  function importContentKey(rawBuf, usages) {
+    return crypto.subtle.importKey('raw', rawBuf, { name: 'AES-GCM' }, false, usages || ['decrypt']);
+  }
+  function show(html) {
+    document.open();
+    document.write(html);
+    document.close();
+  }
+  function decryptContentWithRaw(payload, rawKeyBuf) {
+    return importContentKey(rawKeyBuf).then(function (ck) {
+      return gcmDecrypt(ck, payload.content.iv, payload.content.ct);
+    }).then(function (buf) {
+      return new TextDecoder().decode(buf);
+    });
+  }
+
+  // 1) 저장된 키로 자동 입장 시도 (코드 회수/교체 시 자동 실패 → 코드 재입력)
+  var saved = null;
+  try { saved = localStorage.getItem(KEY_STORE); } catch (e) {}
+  if (saved) {
+    payloadPromise.then(function (payload) {
+      return decryptContentWithRaw(payload, b64ToBuf(saved)).then(show);
+    }).catch(function () {
+      try { localStorage.removeItem(KEY_STORE); } catch (e) {}
+      setMsg('', false);
+    });
+  }
+
+  var input = document.getElementById('codeInput');
+  var btn = document.getElementById('enterBtn');
+  var msg = document.getElementById('msg');
+  function setMsg(text, ok) { msg.textContent = text; msg.className = ok ? 'msg ok' : 'msg'; }
+
+  function tryUnwrap(payload, codeKey, idx) {
+    if (idx >= payload.wraps.length) return Promise.reject(new Error('no-match'));
+    var w = payload.wraps[idx];
+    return gcmDecrypt(codeKey, w.iv, w.ct).catch(function () {
+      return tryUnwrap(payload, codeKey, idx + 1);
+    });
+  }
+
+  function enter() {
+    var code = (input.value || '').trim();
+    if (!code) { setMsg('입장 코드를 입력해주세요.'); return; }
+    btn.disabled = true;
+    setMsg('확인 중…', true);
+    payloadPromise.then(function (payload) {
+      return deriveKey(code, b64ToBuf(payload.salt)).then(function (codeKey) {
+        return tryUnwrap(payload, codeKey, 0);
+      }).then(function (rawKeyBuf) {
+        try { localStorage.setItem(KEY_STORE, bufToB64(rawKeyBuf)); } catch (e) {}
+        setMsg('확인되었습니다. 여는 중…', true);
+        return decryptContentWithRaw(payload, rawKeyBuf).then(show);
+      });
+    }).catch(function (e) {
+      btn.disabled = false;
+      if (e && /payload fetch/.test(String(e.message))) {
+        setMsg('데이터를 불러오지 못했습니다. 네트워크 확인 후 새로고침해주세요.');
+      } else {
+        setMsg('코드가 올바르지 않습니다. 관리자에게 문의해주세요.');
+        input.select();
+      }
+    });
+  }
+  btn.addEventListener('click', enter);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') enter(); });
+})();
+</script>
+</body>
+</html>
