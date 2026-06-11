@@ -30,11 +30,19 @@
   h1 { font-size: 1.32em; color: var(--fhn-green); margin: 12px 0 6px; letter-spacing: -0.01em; }
   .sub { font-size: 0.86em; color: #6f8077; line-height: 1.65; margin-bottom: 26px; }
   .row { display: flex; gap: 8px; }
+  .input-wrap { position: relative; flex: 1; display: flex; }
   input {
-    flex: 1; padding: 13px 16px; border: 1.6px solid #d7e3da; border-radius: 12px;
-    font-size: 0.95em; outline: none; letter-spacing: 0.04em;
+    flex: 1; width: 100%; padding: 13px 46px 13px 16px; border: 1.6px solid #d7e3da; border-radius: 12px;
+    font-size: 0.95em; outline: none; letter-spacing: 0.04em; box-sizing: border-box;
   }
   input:focus { border-color: var(--fhn-green-bright); }
+  .eye-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; padding: 7px; margin: 0; cursor: pointer;
+    color: #8aa094; display: flex; align-items: center; border-radius: 8px;
+  }
+  .eye-btn:hover { color: var(--fhn-green); background: #eef5f0; }
+  .eye-btn svg { width: 20px; height: 20px; display: block; }
   button {
     padding: 13px 22px; border: none; border-radius: 12px; cursor: pointer;
     background: linear-gradient(135deg, var(--fhn-green) 0%, var(--fhn-green-bright) 100%);
@@ -52,7 +60,10 @@
     <h1>Farmhannong Agro Weekly</h1>
     <p class="sub">사내 전용 페이지입니다.<br>관리자에게 부여받은 <b>개인 입장 코드</b>를 입력해주세요.</p>
     <div class="row">
-      <input type="password" id="codeInput" placeholder="입장 코드" autocomplete="off" autofocus>
+      <div class="input-wrap">
+        <input type="password" id="codeInput" placeholder="입장 코드" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus>
+        <button type="button" class="eye-btn" id="eyeBtn" aria-label="코드 보기" title="코드 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
       <button id="enterBtn">입장</button>
     </div>
     <div class="msg" id="msg"></div>
@@ -155,6 +166,22 @@
   }
   btn.addEventListener('click', enter);
   input.addEventListener('keydown', function (e) { if (e.key === 'Enter') enter(); });
+
+  // 코드 보기/숨기기 토글 (눈 아이콘)
+  var eyeBtn = document.getElementById('eyeBtn');
+  var EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.5 10.5 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.5 9.5 0 0 1 12 5c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  if (eyeBtn) {
+    eyeBtn.addEventListener('click', function () {
+      var showing = input.type === 'password';
+      input.type = showing ? 'text' : 'password';
+      eyeBtn.innerHTML = showing ? EYE_OFF : EYE;
+      var label = showing ? '코드 숨기기' : '코드 보기';
+      eyeBtn.setAttribute('aria-label', label);
+      eyeBtn.setAttribute('title', label);
+      input.focus();
+    });
+  }
 })();
 </script>
 </body>
