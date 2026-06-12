@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Farmhannong Agro Weekly</title>
-<meta name="theme-color" content="#16763f">
+<meta name="theme-color" content="#f3efe4">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -13,51 +13,100 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agro Weekly">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root { --fhn-green: #15663f; --fhn-green-bright: #2f9e44; }
+  :root { --green:#15663f; --green-bright:#2f9e44; --ink:#1b271f; --paper:#fcfaf3; --ivory:#f3efe4; --hair:#e4ddcc; --mono:'IBM Plex Mono',ui-monospace,monospace; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
     font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
-    background: linear-gradient(150deg, #eef6ef 0%, #dcecdf 45%, #cfe5d6 100%);
-    padding: 20px;
+    background-color: var(--ivory);
+    background-image: radial-gradient(1000px 420px at 88% -14%, rgba(47,93,57,0.06), transparent 62%);
+    color: var(--ink); padding: 24px;
   }
   .gate {
-    width: 100%; max-width: 420px; background: #fff; border-radius: 22px;
-    box-shadow: 0 18px 50px rgba(21,102,63,0.16); padding: 40px 36px; text-align: center;
+    width: 100%; max-width: 430px; background: var(--paper);
+    border: 1px solid var(--hair); border-radius: 18px;
+    box-shadow: 0 18px 48px rgba(27,39,31,0.10); padding: 46px 38px 38px; text-align: center;
+    opacity: 0;
   }
-  .logo { font-size: 2.2em; }
-  h1 { font-size: 1.32em; color: var(--fhn-green); margin: 12px 0 6px; letter-spacing: -0.01em; }
-  .sub { font-size: 0.86em; color: #6f8077; line-height: 1.65; margin-bottom: 26px; }
+  .sprout { width: 50px; height: 60px; display: block; margin: 0 auto 16px; }
+  .sprout path { fill: none; stroke: var(--green); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { font-family: 'Playfair Display', serif; font-size: 1.55em; font-weight: 700; color: var(--green); letter-spacing: 0.01em; line-height: 1.15; }
+  .kicker { font-family: var(--mono); font-size: 0.62em; letter-spacing: 0.22em; color: #7c8a80; margin-top: 9px; text-transform: uppercase; }
+  .sub { font-size: 0.86em; color: #6f8077; line-height: 1.7; margin: 20px 0 24px; }
+  .sub b { color: var(--ink); font-weight: 700; }
   .row { display: flex; gap: 8px; }
   .input-wrap { position: relative; flex: 1; display: flex; }
   input {
-    flex: 1; width: 100%; padding: 13px 46px 13px 16px; border: 1.6px solid #d7e3da; border-radius: 12px;
-    font-size: 0.95em; outline: none; letter-spacing: 0.04em; box-sizing: border-box;
+    flex: 1; width: 100%; padding: 13px 46px 13px 16px; border: 1.5px solid var(--hair); border-radius: 11px;
+    font-family: var(--mono); font-size: 0.92em; letter-spacing: 0.06em; color: var(--ink);
+    background: #fff; outline: none; box-sizing: border-box; transition: border-color .16s;
   }
-  input:focus { border-color: var(--fhn-green-bright); }
+  input::placeholder { color: #aeb8ad; letter-spacing: 0.04em; }
+  input:focus { border-color: var(--green-bright); }
   .eye-btn {
     position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
     background: none; border: none; padding: 7px; margin: 0; cursor: pointer;
     color: #8aa094; display: flex; align-items: center; border-radius: 8px;
   }
-  .eye-btn:hover { color: var(--fhn-green); background: #eef5f0; }
+  .eye-btn:hover { color: var(--green); background: #eef5f0; }
   .eye-btn svg { width: 20px; height: 20px; display: block; }
-  button {
-    padding: 13px 22px; border: none; border-radius: 12px; cursor: pointer;
-    background: linear-gradient(135deg, var(--fhn-green) 0%, var(--fhn-green-bright) 100%);
-    color: #fff; font-size: 0.95em; font-weight: 700;
+  #enterBtn {
+    padding: 13px 22px; border: none; border-radius: 11px; cursor: pointer;
+    background: var(--green); color: #fff; font-size: 0.92em; font-weight: 700; letter-spacing: 0.02em;
+    transition: background .16s, transform .12s;
   }
-  button:disabled { opacity: 0.55; cursor: default; }
-  .msg { min-height: 1.3em; margin-top: 14px; font-size: 0.84em; color: #c0392b; }
-  .msg.ok { color: var(--fhn-green); }
-  .note { margin-top: 22px; font-size: 0.76em; color: #93a39a; line-height: 1.7; }
+  #enterBtn:hover { background: var(--green-bright); }
+  #enterBtn:active { transform: scale(0.97); }
+  #enterBtn:disabled { opacity: 0.55; cursor: default; }
+  .msg { min-height: 1.3em; margin-top: 14px; font-size: 0.82em; color: #b03a2e; font-family: var(--mono); letter-spacing: 0.01em; }
+  .msg.ok { color: var(--green); }
+  .note { margin-top: 22px; font-size: 0.74em; color: #9aa392; line-height: 1.75; }
+  .note .hr { width: 28px; height: 1px; background: var(--hair); margin: 0 auto 14px; }
+
+  /* ---- intro motion (plays when body.ready) ---- */
+  .ready .gate { animation: fadeIn .55s ease forwards; }
+  .ready .sprout .stem  { animation: draw .7s .30s ease forwards; }
+  .ready .sprout .leafL { animation: draw .6s .62s ease forwards; }
+  .ready .sprout .leafR { animation: draw .6s .80s ease forwards; }
+  .ready h1      { animation: rise .6s .38s ease both; }
+  .ready .kicker { animation: rise .6s .46s ease both; }
+  .ready .sub    { animation: rise .6s .52s ease both; }
+  .ready .row    { animation: rise .6s .60s ease both; }
+  .ready .note   { animation: rise .6s .72s ease both; }
+  .sprout .stem, .sprout .leafL, .sprout .leafR { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  h1, .kicker, .sub, .row, .note { opacity: 0; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  /* ---- exit motion (plays when body.leaving) ---- */
+  .leaving .gate   { animation: gateOut .72s cubic-bezier(.4,0,.2,1) forwards; }
+  .leaving .sprout { animation: grow .72s cubic-bezier(.4,0,.2,1) forwards; transform-origin: 24px 56px; }
+  @keyframes gateOut { to { opacity: 0; transform: translateY(-10px) scale(0.985); } }
+  @keyframes grow { 40% { opacity: 1; } to { opacity: 0; transform: translateY(-14px) scale(1.7); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gate { opacity: 1; }
+    h1, .kicker, .sub, .row, .note { opacity: 1; }
+    .sprout .stem, .sprout .leafL, .sprout .leafR { stroke-dashoffset: 0; }
+    .ready *, .leaving * { animation: none !important; }
+  }
 </style>
 </head>
 <body>
   <div class="gate">
-    <div class="logo">🌱</div>
+    <svg class="sprout" viewBox="0 0 48 60" aria-hidden="true">
+      <path class="stem"  pathLength="1" d="M24 56 L24 27"/>
+      <path class="leafL" pathLength="1" d="M24 32 C 11 32 5 23 6 12 C 19 13 24 22 24 32"/>
+      <path class="leafR" pathLength="1" d="M24 27 C 37 27 43 18 42 7 C 29 8 24 17 24 27"/>
+    </svg>
     <h1>Farmhannong Agro Weekly</h1>
+    <div class="kicker">Overseas Crop-Protection Intelligence</div>
     <p class="sub">사내 전용 페이지입니다.<br>관리자에게 부여받은 <b>개인 입장 코드</b>를 입력해주세요.</p>
     <div class="row">
       <div class="input-wrap">
@@ -67,13 +116,14 @@
       <button id="enterBtn">입장</button>
     </div>
     <div class="msg" id="msg"></div>
-    <p class="note">코드가 확인되면 이 브라우저에서는 다시 묻지 않습니다.<br>코드가 없거나 잊으셨다면 관리자에게 문의해주세요.</p>
+    <p class="note"><span class="hr"></span>코드가 확인되면 이 브라우저에서는 다시 묻지 않습니다.<br>코드가 없거나 잊으셨다면 관리자에게 문의해주세요.</p>
   </div>
 <script>
 (function () {
   'use strict';
   var KEY_STORE = 'fhn_site_key';
   var enc = new TextEncoder();
+  var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var payloadPromise = fetch('payload.enc', { cache: 'no-store' }).then(function (r) {
     if (!r.ok) throw new Error('payload fetch ' + r.status);
     return r.json();
@@ -108,6 +158,12 @@
     document.write(html);
     document.close();
   }
+  // 입장 모션(새싹이 자라며 전환) 후 사이트 표시. 배경이 앱과 동일한 아이보리라 전환이 이어진다.
+  function playExitThenShow(html) {
+    if (REDUCE) { show(html); return; }
+    document.body.classList.add('leaving');
+    setTimeout(function () { show(html); }, 720);
+  }
   function decryptContentWithRaw(payload, rawKeyBuf) {
     return importContentKey(rawKeyBuf).then(function (ck) {
       return gcmDecrypt(ck, payload.content.iv, payload.content.ct);
@@ -116,7 +172,17 @@
     });
   }
 
-  // 1) 저장된 키로 자동 입장 시도 (코드 회수/교체 시 자동 실패 → 코드 재입력)
+  var input = document.getElementById('codeInput');
+  var btn = document.getElementById('enterBtn');
+  var msg = document.getElementById('msg');
+  function setMsg(text, ok) { msg.textContent = text; msg.className = ok ? 'msg ok' : 'msg'; }
+  function revealGate() {
+    document.body.classList.add('ready');
+    try { input.focus(); } catch (e) {}
+  }
+
+  // 1) 저장된 키로 자동 입장 시도 — 성공 시 게이트를 보이지 않고 바로 사이트로,
+  //    실패(코드 회수/교체) 시 게이트를 등장시켜 코드 재입력.
   var saved = null;
   try { saved = localStorage.getItem(KEY_STORE); } catch (e) {}
   if (saved) {
@@ -124,14 +190,11 @@
       return decryptContentWithRaw(payload, b64ToBuf(saved)).then(show);
     }).catch(function () {
       try { localStorage.removeItem(KEY_STORE); } catch (e) {}
-      setMsg('', false);
+      revealGate();
     });
+  } else {
+    revealGate();
   }
-
-  var input = document.getElementById('codeInput');
-  var btn = document.getElementById('enterBtn');
-  var msg = document.getElementById('msg');
-  function setMsg(text, ok) { msg.textContent = text; msg.className = ok ? 'msg ok' : 'msg'; }
 
   function tryUnwrap(payload, codeKey, idx) {
     if (idx >= payload.wraps.length) return Promise.reject(new Error('no-match'));
@@ -152,7 +215,7 @@
       }).then(function (rawKeyBuf) {
         try { localStorage.setItem(KEY_STORE, bufToB64(rawKeyBuf)); } catch (e) {}
         setMsg('확인되었습니다. 여는 중…', true);
-        return decryptContentWithRaw(payload, rawKeyBuf).then(show);
+        return decryptContentWithRaw(payload, rawKeyBuf).then(playExitThenShow);
       });
     }).catch(function (e) {
       btn.disabled = false;
