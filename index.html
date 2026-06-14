@@ -178,7 +178,9 @@
   function setMsg(text, ok) { msg.textContent = text; msg.className = ok ? 'msg ok' : 'msg'; }
   function revealGate() {
     document.body.classList.add('ready');
-    try { input.focus(); } catch (e) {}
+    // 지난번 입장 코드를 미리 채워둔다(이 브라우저에 한해). 클릭 한 번이면 입장.
+    try { var last = localStorage.getItem('fhn_last_code'); if (last) input.value = last; } catch (e) {}
+    try { input.focus(); var n = input.value.length; if (n) input.setSelectionRange(n, n); } catch (e) {}
   }
 
   // 1) 저장된 키로 자동 입장 시도 — 성공 시 게이트를 보이지 않고 바로 사이트로,
@@ -213,7 +215,7 @@
       return deriveKey(code, b64ToBuf(payload.salt)).then(function (codeKey) {
         return tryUnwrap(payload, codeKey, 0);
       }).then(function (rawKeyBuf) {
-        try { localStorage.setItem(KEY_STORE, bufToB64(rawKeyBuf)); } catch (e) {}
+        try { localStorage.setItem(KEY_STORE, bufToB64(rawKeyBuf)); localStorage.setItem('fhn_last_code', code); } catch (e) {}
         setMsg('확인되었습니다. 여는 중…', true);
         return decryptContentWithRaw(payload, rawKeyBuf).then(playExitThenShow);
       });
