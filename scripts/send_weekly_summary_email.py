@@ -14,6 +14,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 INDEX_PATH = REPO_ROOT / "app.html"  # 평문 앱(git 미추적). 배포물은 payload.enc(암호문)
 OUTPUT_DIR = REPO_ROOT / "weekly-email-output"
+# 업로드 원본 리포트 PDF 보관 폴더(git 미추적). 메일 발송 시 해당 주차 PDF를 첨부(사이트엔 비제공).
+REPORT_PDF_DIR = REPO_ROOT / "report-pdfs"
+
+
+def source_report_pdfs(latest):
+    week_dir = REPORT_PDF_DIR / str(latest)
+    if not week_dir.is_dir():
+        return []
+    return sorted(p for p in week_dir.glob("*.pdf") if p.is_file())
 SITE_URL = os.getenv("SITE_URL") or "https://ziopeno.github.io/farmhannong-agro-weekly-db/"
 IMAGE_GREETING_TEMPLATE = "금주({latest})의 Agro weekly report를 송부드리오니 업무에 참고 바랍니다"
 IS_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
@@ -536,6 +545,11 @@ def main():
     html_part.add_related(jpg_path.read_bytes(), maintype="image", subtype="jpeg", cid=image_cid)
     message.add_attachment(pdf_path.read_bytes(), maintype="application", subtype="pdf", filename=pdf_path.name)
 
+    # 해당 주차의 업로드 원본 리포트 PDF가 있으면 함께 첨부(메일 발송 시에만 — 사이트엔 비제공)
+    source_pdfs = source_report_pdfs(latest)
+    for src in source_pdfs:
+        message.add_attachment(src.read_bytes(), maintype="application", subtype="pdf", filename=src.name)
+
     context = ssl.create_default_context()
     if smtp_port == 465:
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context, timeout=30) as server:
@@ -547,7 +561,8 @@ def main():
             server.login(smtp_user, smtp_password)
             server.send_message(message)
 
-    print(f"Sent weekly summary email to {len(recipients)} recipient(s) with PDF and JPG summary.")
+    extra = f" + 원본 리포트 PDF {len(source_pdfs)}건" if source_pdfs else ""
+    print(f"Sent weekly summary email to {len(recipients)} recipient(s) with PDF and JPG summary{extra}.")
 
 
 if __name__ == "__main__":
