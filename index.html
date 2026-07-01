@@ -182,6 +182,45 @@
 
   function installFilterUiEnhancement() {
     var FILTER_IDS = ['yearFilter', 'dateFilter', 'categoryFilter', 'productTypeFilter', 'companyFilter', 'countryFilter'];
+    var REGION_LABELS = {
+      'eu': true,
+      '유럽연합': true,
+      '유럽': true,
+      '글로벌': true,
+      '세계': true,
+      '전 세계': true,
+      '아시아': true,
+      '동남아': true,
+      '동남아시아': true,
+      '북미': true,
+      '남미': true,
+      '중남미': true,
+      '중동': true,
+      '아프리카': true,
+      '오세아니아': true
+    };
+
+    function normalizeCountryLabel(value) {
+      var text = String(value || '').replace(/\s+/g, ' ').trim();
+      if (!text) return text;
+      var parts = text.split(/\s*(?:\/|\||,|·|&|\s+및\s+)\s*/).filter(Boolean);
+      if (parts.length <= 1) return text;
+      var countries = parts.filter(function (part) {
+        return !REGION_LABELS[part.toLowerCase()];
+      });
+      return countries[0] || parts[parts.length - 1] || text;
+    }
+
+    function normalizeNewsCountries() {
+      if (typeof newsDatabase === 'undefined' || !newsDatabase) return;
+      Object.keys(newsDatabase).forEach(function (date) {
+        var items = newsDatabase[date];
+        if (!Array.isArray(items)) return;
+        items.forEach(function (item) {
+          if (item && item.country) item.country = normalizeCountryLabel(item.country);
+        });
+      });
+    }
 
     function getInputs(container) {
       return Array.prototype.slice.call(container.querySelectorAll('input[type="checkbox"]'));
@@ -262,6 +301,7 @@
       });
       if (shouldRefresh) enhanceFilters();
     });
+    normalizeNewsCountries();
     observer.observe(document.body, { childList: true, subtree: true });
     enhanceFilters();
     window.setTimeout(enhanceFilters, 100);
