@@ -153,9 +153,138 @@
   function importContentKey(rawBuf, usages) {
     return crypto.subtle.importKey('raw', rawBuf, { name: 'AES-GCM' }, false, usages || ['decrypt']);
   }
+  var FILTER_UI_STYLE = [
+    '<style data-filter-ui-enhancement>',
+    '.filters-panel-trigger{min-height:54px!important;padding:13px 16px!important;font-size:1.06rem!important;font-weight:800!important;color:#0f5f38!important;border:1.5px solid #c9d9cf!important;background:rgba(255,255,255,.96)!important;box-shadow:0 4px 14px rgba(21,102,63,.08)!important;}',
+    '.filters-panel-trigger:hover{border-color:#7eaa91!important;background:#fff!important;}',
+    '.filters-container{gap:12px!important;padding:14px!important;background:rgba(248,251,249,.96)!important;border:1px solid #d8e4dc!important;}',
+    '.checklist-dropdown summary{min-height:58px!important;padding:15px 44px 15px 16px!important;border:1.5px solid #cbdad1!important;background:rgba(255,255,255,.98)!important;box-shadow:0 3px 10px rgba(31,65,45,.055)!important;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease,transform .16s ease!important;}',
+    '.checklist-dropdown summary:hover{border-color:#7ea78e!important;background:#fff!important;transform:translateY(-1px)!important;box-shadow:0 6px 16px rgba(31,65,45,.09)!important;}',
+    '.checklist-dropdown .filter-label{font-size:1.04rem!important;font-weight:800!important;color:#18251d!important;gap:8px!important;}',
+    '.checklist-dropdown .filter-summary{font-size:.95rem!important;font-weight:800!important;color:#147044!important;max-width:46%!important;}',
+    '.checklist-dropdown summary::after{right:15px!important;font-size:1.35rem!important;font-weight:800!important;color:#547565!important;}',
+    '.checklist-dropdown[open] summary{border-color:#218653!important;background:#f8fcf9!important;box-shadow:0 0 0 3px rgba(33,134,83,.13)!important;}',
+    '.filter-options-panel{margin-top:7px!important;padding:11px!important;border:1px solid #d5e2da!important;border-radius:8px!important;background:rgba(255,255,255,.98)!important;box-shadow:0 7px 18px rgba(31,65,45,.08)!important;}',
+    '.filter-option-search{min-height:44px!important;margin-bottom:9px!important;padding:10px 12px!important;font-size:.96rem!important;border-color:#cbdad1!important;}',
+    '.filter-bulk-actions{display:flex;align-items:center;gap:7px;margin:0 0 9px;padding-bottom:9px;border-bottom:1px solid #e1e9e4;}',
+    '.filter-bulk-btn{min-height:36px;padding:7px 11px;border:1px solid #9bbbab;border-radius:7px;background:#fff;color:#155f3a;font:inherit;font-size:.88rem;font-weight:800;cursor:pointer;transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease;}',
+    '.filter-bulk-btn:hover{background:#eaf5ee;border-color:#438661;color:#0d4f2f;transform:translateY(-1px);}',
+    '.filter-bulk-btn:focus-visible{outline:3px solid rgba(33,134,83,.2);outline-offset:2px;}',
+    '.filter-bulk-count{margin-left:auto;color:#607568;font-size:.82rem;font-weight:700;white-space:nowrap;}',
+    '.multi-filter{gap:4px!important;max-height:280px!important;padding:6px!important;background:#fff!important;border-color:#dbe6df!important;}',
+    '.filter-chip{min-height:42px!important;gap:10px!important;padding:2px 4px!important;border-radius:7px!important;}',
+    '.filter-chip:hover{background:#edf7f1!important;}',
+    '.filter-chip input{width:20px!important;height:20px!important;}',
+    '.filter-chip span{min-height:36px!important;padding:7px 8px!important;font-size:.98rem!important;font-weight:700!important;color:#243229!important;}',
+    '@media(max-width:600px){.filters-container{padding:12px!important}.checklist-dropdown summary{min-height:60px!important;padding:15px 42px 15px 15px!important}.checklist-dropdown .filter-label{font-size:1.08rem!important}.checklist-dropdown .filter-summary{font-size:.96rem!important}.filter-bulk-actions{flex-wrap:wrap}.filter-bulk-count{width:100%;margin-left:0;text-align:right}.filter-chip span{font-size:1rem!important}}',
+    '</style>'
+  ].join('');
+
+  function installFilterUiEnhancement() {
+    var FILTER_IDS = ['yearFilter', 'dateFilter', 'categoryFilter', 'productTypeFilter', 'companyFilter', 'countryFilter'];
+
+    function getInputs(container) {
+      return Array.prototype.slice.call(container.querySelectorAll('input[type="checkbox"]'));
+    }
+
+    function updateBulkCount(container) {
+      var toolbar = container.parentElement && container.parentElement.querySelector('.filter-bulk-actions');
+      if (!toolbar) return;
+      var inputs = getInputs(container);
+      var checked = inputs.filter(function (input) { return input.checked; }).length;
+      var count = toolbar.querySelector('.filter-bulk-count');
+      var nextText = checked + ' / ' + inputs.length + ' 선택';
+      if (count && count.textContent !== nextText) count.textContent = nextText;
+    }
+
+    function applyBulkSelection(container, checked) {
+      var inputs = getInputs(container);
+      inputs.forEach(function (input) {
+        if (!input.disabled) input.checked = checked;
+      });
+      if (container.id === 'yearFilter' && typeof window.updateDateDropdown === 'function') {
+        window.updateDateDropdown();
+      }
+      if (typeof window.applyFilters === 'function') window.applyFilters();
+      updateBulkCount(container);
+      if (container.id === 'yearFilter') {
+        var dateContainer = document.getElementById('dateFilter');
+        if (dateContainer) updateBulkCount(dateContainer);
+      }
+    }
+
+    function makeButton(label, checked, container) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'filter-bulk-btn';
+      button.textContent = label;
+      button.setAttribute('aria-label', label + ': ' + container.id);
+      button.addEventListener('click', function () {
+        applyBulkSelection(container, checked);
+      });
+      return button;
+    }
+
+    function ensureToolbar(container) {
+      if (!container || !container.parentElement) return;
+      var panel = container.parentElement;
+      var toolbar = panel.querySelector('.filter-bulk-actions');
+      if (!toolbar) {
+        toolbar = document.createElement('div');
+        toolbar.className = 'filter-bulk-actions';
+        toolbar.appendChild(makeButton('전체 선택', true, container));
+        toolbar.appendChild(makeButton('전체 해제', false, container));
+        var count = document.createElement('span');
+        count.className = 'filter-bulk-count';
+        count.setAttribute('aria-live', 'polite');
+        toolbar.appendChild(count);
+        panel.insertBefore(toolbar, container);
+      }
+      updateBulkCount(container);
+    }
+
+    function enhanceFilters() {
+      FILTER_IDS.forEach(function (id) {
+        ensureToolbar(document.getElementById(id));
+      });
+    }
+
+    document.addEventListener('change', function (event) {
+      var input = event.target;
+      if (!input || input.type !== 'checkbox') return;
+      var container = input.closest && input.closest('.multi-filter');
+      if (container) updateBulkCount(container);
+    });
+
+    var observer = new MutationObserver(function (mutations) {
+      var shouldRefresh = mutations.some(function (mutation) {
+        return mutation.type === 'childList';
+      });
+      if (shouldRefresh) enhanceFilters();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    enhanceFilters();
+    window.setTimeout(enhanceFilters, 100);
+    window.setTimeout(enhanceFilters, 500);
+  }
+
+  function enhanceAppHtml(html) {
+    if (!html || html.indexOf('data-filter-ui-enhancement') !== -1) return html;
+    var script = '<scr' + 'ipt data-filter-ui-enhancement>(' + installFilterUiEnhancement.toString() + ')();</scr' + 'ipt>';
+    if (/<\/head>/i.test(html)) {
+      html = html.replace(/<\/head>/i, FILTER_UI_STYLE + '</head>');
+    } else {
+      html = FILTER_UI_STYLE + html;
+    }
+    if (/<\/body>/i.test(html)) {
+      return html.replace(/<\/body>/i, script + '</body>');
+    }
+    return html + script;
+  }
+
   function show(html) {
     document.open();
-    document.write(html);
+    document.write(enhanceAppHtml(html));
     document.close();
   }
   // 입장 모션(새싹이 자라며 전환) 후 사이트 표시. 배경이 앱과 동일한 아이보리라 전환이 이어진다.
