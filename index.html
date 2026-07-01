@@ -200,15 +200,24 @@
       '오세아니아': true
     };
 
-    function normalizeCountryLabel(value) {
+    function splitCountryLabels(value) {
       var text = String(value || '').replace(/\s+/g, ' ').trim();
-      if (!text) return text;
-      var parts = text.split(/\s*(?:\/|\||,|·|&|\s+및\s+)\s*/).filter(Boolean);
-      if (parts.length <= 1) return text;
+      if (!text) return [];
+      return text.split(/\s*(?:\/|\||,|·|&|\s+및\s+)\s*/)
+        .map(function (part) { return part.trim(); })
+        .filter(function (part, index, parts) {
+          return part && parts.indexOf(part) === index;
+        });
+    }
+
+    function normalizeCountryLabel(value) {
+      var parts = splitCountryLabels(value);
+      if (!parts.length) return '';
+      if (parts.length === 1) return parts[0];
       var countries = parts.filter(function (part) {
         return !REGION_LABELS[part.toLowerCase()];
       });
-      return countries[0] || parts[parts.length - 1] || text;
+      return countries[0] || parts[parts.length - 1];
     }
 
     function normalizeNewsCountries() {
@@ -217,7 +226,14 @@
         var items = newsDatabase[date];
         if (!Array.isArray(items)) return;
         items.forEach(function (item) {
-          if (item && item.country) item.country = normalizeCountryLabel(item.country);
+          if (!item || !item.country) return;
+          var countries = splitCountryLabels(item.country);
+          item._countryFilterValues = countries;
+          item.country = normalizeCountryLabel(item.country);
+          var countrySearchText = countries.join(' ');
+          if (countrySearchText && String(item.search_keywords || '').indexOf(countrySearchText) === -1) {
+            item.search_keywords = [item.search_keywords, countrySearchText].filter(Boolean).join(' ');
+          }
         });
       });
     }
@@ -301,6 +317,13 @@
       });
       if (shouldRefresh) enhanceFilters();
     });
+    window.getCountryFilterValues = function (item) {
+      if (!item) return [];
+      if (Array.isArray(item._countryFilterValues) && item._countryFilterValues.length) {
+        return item._countryFilterValues;
+      }
+      return item.country ? [item.country] : [];
+    };
     normalizeNewsCountries();
     observer.observe(document.body, { childList: true, subtree: true });
     enhanceFilters();
@@ -310,6 +333,14 @@
 
   function enhanceAppHtml(html) {
     if (!html || html.indexOf('data-filter-ui-enhancement') !== -1) return html;
+    html = html.replace(
+      /if\s*\(\s*item\.country\s*\)\s*countriesSet\.add\(\s*item\.country\s*\)\s*;/g,
+      'getCountryFilterValues(item).forEach(country => countriesSet.add(country));'
+    );
+    html = html.replace(
+      /selectedCountries\.includes\(\s*item\.country\s*\)/g,
+      'getCountryFilterValues(item).some(country => selectedCountries.includes(country))'
+    );
     var script = '<scr' + 'ipt data-filter-ui-enhancement>(' + installFilterUiEnhancement.toString() + ')();</scr' + 'ipt>';
     if (/<\/head>/i.test(html)) {
       html = html.replace(/<\/head>/i, FILTER_UI_STYLE + '</head>');
