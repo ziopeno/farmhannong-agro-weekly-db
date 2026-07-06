@@ -26,6 +26,11 @@ def source_report_pdfs(latest):
 SITE_URL = os.getenv("SITE_URL") or "https://ziopeno.github.io/farmhannong-agro-weekly-db/"
 IMAGE_GREETING_TEMPLATE = "금주({latest})의 Agro weekly report를 송부드리오니 업무에 참고 바랍니다"
 IS_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+# 발신 전용 안내: 이 메일은 자동 발송 주소에서 나가므로 회신해도 수신되지 않음.
+NOREPLY_NOTICE = (
+    "※ 참고: 본 메일은 발신 전용 주소에서 자동 발송되어, 회신하셔도 답변을 받으실 수 없습니다. "
+    "문의사항은 담당 관리자에게 직접 연락해 주시기 바랍니다."
+)
 
 
 def parse_database():
@@ -84,15 +89,50 @@ def image_greeting(latest):
 
 
 def pdf_font_names():
+    # 한글 폰트를 PDF에 '임베드'해야 어떤 뷰어에서도 글자 간격이 깨지지 않는다.
+    # Adobe-Korea1 CID 폰트(UnicodeCIDFont)는 임베드되지 않아, 뷰어가 한글 폰트를
+    # 대체하면 글리프 폭이 metric과 어긋나 제목 간격이 붙었다 벌어졌다 하며 깨진다.
+    # 그래서 임베드 가능한 TrueType 폰트(.ttf)를 우선 등록하고, 없을 때만 CID로 폴백한다.
     from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
-    for font_name in ("HYGothic-Medium", "HYSMyeongJo-Medium"):
+    sans_candidates = [
+        "/System/Library/Fonts/Supplemental/AppleGothic.ttf",       # macOS (이 작업은 관리자 Mac에서 실행)
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",          # Linux (Nanum: 임베드 가능)
+        "/usr/share/fonts/truetype/nanum/NanumBarunGothic.ttf",
+    ]
+    serif_candidates = [
+        "/System/Library/Fonts/Supplemental/AppleMyungjo.ttf",
+        "/usr/share/fonts/truetype/nanum/NanumMyeongjo.ttf",
+    ]
+
+    def register_ttf(name, candidates):
+        for path in candidates:
+            if not Path(path).exists():
+                continue
+            try:
+                pdfmetrics.registerFont(TTFont(name, path))  # CFF(.ttc/.otf)는 실패 → 다음 후보
+                return name
+            except Exception:
+                continue
+        return None
+
+    sans = register_ttf("AgroSans", sans_candidates)
+    serif = register_ttf("AgroSerif", serif_candidates)
+
+    if sans is None:
+        # 임베드 가능한 TrueType이 전혀 없을 때만 비임베드 CID 폰트로 폴백(기존 동작 보존).
         try:
-            pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+            pdfmetrics.registerFont(UnicodeCIDFont("HYGothic-Medium"))
         except Exception:
             pass
-    return "HYGothic-Medium", "HYSMyeongJo-Medium"
+        sans = "HYGothic-Medium"
+    if serif is None:
+        # 명조 폰트가 없으면 비임베드 폰트로 떨어지지 말고 임베드된 고딕을 본문에도 재사용.
+        serif = sans
+
+    return sans, serif
 
 
 def generate_weekly_pdf(latest, cards):
@@ -413,10 +453,13 @@ def build_messages(latest, cards, image_src):
         f"사이트: {SITE_URL}",
         "카드뉴스 요약 이미지는 HTML 메일 본문에서 확인하실 수 있으며, 전체 PDF는 첨부파일로 포함되어 있습니다.",
         "",
+        NOREPLY_NOTICE,
+        "",
     ]
     html_lines = [
         f'<p><img src="{escape(image_src, quote=True)}" alt="Farmhannong Agro Weekly {escape(latest)} 요약 모음" style="width:100%;max-width:920px;border:1px solid #d8e1ec;border-radius:10px;"></p>',
         f'<p><a href="{escape(SITE_URL)}">사이트에서 전체 카드뉴스 보기</a></p>',
+        f'<p style="background:#fff8e1;border:1px solid #f0d48a;border-radius:8px;padding:10px 14px;font-size:13px;color:#7a5c00;margin:12px 0;">{escape(NOREPLY_NOTICE)}</p>',
         "<hr>",
     ]
 
@@ -535,7 +578,7 @@ def main():
     plain_body, html_body = build_messages(latest, cards, f"cid:{image_cid[1:-1]}")
 
     message = EmailMessage()
-    message["Subject"] = f"Ageo weekly 공유 ('{latest}')"
+    message["Subject"] = f"Agro weekly 공유 ('{latest}')"
     message["From"] = smtp_from
     message["To"] = ", ".join(recipients)
     message.set_content(plain_body)

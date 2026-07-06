@@ -8,3 +8,12 @@ app.html
 .site-access.json
 app.html.bak-*
 report-pdfs/
+
+# 비공개 자료 — 무인 9시 작업의 'git add -A'가 공개 저장소로 올리지 못하도록 차단
+# (회사 내부 문서·시크릿 설정 문서·파이프라인 워크플로/스크립트는 공개 repo에 두지 않음)
+*.pptx
+*.xlsx
+/*.pdf
+AUTOMATION_SETUP.md
+.github/
+scripts/generate_report_cards.js
