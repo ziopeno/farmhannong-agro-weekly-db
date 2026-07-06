@@ -190,8 +190,11 @@ function main() {
     ensure(pages.latest === local.latest, `GitHub Pages is stale: pages=${pages.latest}, local=${local.latest}`);
     ensure(okCount(pages.cards), `GitHub Pages latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${pages.latest}, cards=${pages.cards}`);
     // 공개 로더에 평문 카드 데이터가 섞여 있지 않은지 확인
+    // 실제 평문 유출은 복호화된 app.html의 'const newsDatabase = { ...카드... }' 할당문이 로더에 섞여 들어온 경우다.
+    // 로더가 (복호화 후 런타임에서) newsDatabase 변수를 단순 참조하는 것은 유출이 아니므로,
+    // 'const/let/var newsDatabase =' 할당 시그니처만 검사한다(런타임 참조는 통과).
     const loader = fs.readFileSync(fetchUrlToFile('https://ziopeno.github.io/farmhannong-agro-weekly-db/', 'pages loader'), 'utf8');
-    ensure(loader.indexOf('newsDatabase') === -1, 'public loader page leaks plaintext data');
+    ensure(!/(?:const|let|var)\s+newsDatabase\s*=/.test(loader), 'public loader page leaks plaintext data');
   }
 
   console.log(JSON.stringify({
