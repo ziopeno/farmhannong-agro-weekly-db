@@ -180,6 +180,34 @@
     '</style>'
   ].join('');
 
+  var LOGOUT_UI_STYLE = [
+    '<style data-logout-ui>',
+    '.site-logout-btn{position:fixed;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));z-index:10000;display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:9px 13px;border:1px solid rgba(21,102,63,.26);border-radius:999px;background:rgba(255,255,255,.94);color:#155f3a;font:inherit;font-size:.86rem;font-weight:800;line-height:1;box-shadow:0 5px 16px rgba(27,39,31,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}',
+    '.site-logout-btn:hover{background:#f2f8f4;border-color:#438661;transform:translateY(-1px);box-shadow:0 7px 20px rgba(27,39,31,.16)}',
+    '.site-logout-btn:focus-visible{outline:3px solid rgba(33,134,83,.22);outline-offset:2px}',
+    '.site-logout-btn svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
+    '@media(max-width:600px){.site-logout-btn{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));min-height:38px;padding:8px 11px;font-size:.8rem}}',
+    '</style>'
+  ].join('');
+
+  function installLogoutUi() {
+    if (document.querySelector('.site-logout-btn')) return;
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'site-logout-btn';
+    button.setAttribute('aria-label', '로그아웃');
+    button.setAttribute('title', '로그아웃');
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span>로그아웃</span>';
+    button.addEventListener('click', function () {
+      try {
+        localStorage.removeItem('fhn_site_key');
+        localStorage.removeItem('fhn_last_code');
+      } catch (e) {}
+      window.location.reload();
+    });
+    document.body.appendChild(button);
+  }
+
   function installFilterUiEnhancement() {
     var FILTER_IDS = ['yearFilter', 'dateFilter', 'categoryFilter', 'productTypeFilter', 'companyFilter', 'countryFilter'];
     var REGION_LABELS = {
@@ -341,11 +369,11 @@
       /selectedCountries\.includes\(\s*item\.country\s*\)/g,
       'getCountryFilterValues(item).some(country => selectedCountries.includes(country))'
     );
-    var script = '<scr' + 'ipt data-filter-ui-enhancement>(' + installFilterUiEnhancement.toString() + ')();</scr' + 'ipt>';
+    var script = '<scr' + 'ipt data-filter-ui-enhancement>(' + installFilterUiEnhancement.toString() + ')();(' + installLogoutUi.toString() + ')();</scr' + 'ipt>';
     if (/<\/head>/i.test(html)) {
-      html = html.replace(/<\/head>/i, FILTER_UI_STYLE + '</head>');
+      html = html.replace(/<\/head>/i, FILTER_UI_STYLE + LOGOUT_UI_STYLE + '</head>');
     } else {
-      html = FILTER_UI_STYLE + html;
+      html = FILTER_UI_STYLE + LOGOUT_UI_STYLE + html;
     }
     if (/<\/body>/i.test(html)) {
       return html.replace(/<\/body>/i, script + '</body>');
