@@ -110,6 +110,22 @@ function latestPagesRun(localSha) {
   return api.workflow_runs?.find(run => run.name === 'pages build and deployment' && run.head_sha === localSha) || null;
 }
 
+// GitHub 측 장애면 "배포 깨짐"이 아니라 "반영 지연"이다. 타임아웃 진단에 이 구분을 넣어
+// 빈 트리거 커밋으로 대응하는 실수(히스토리 오염)를 막는다.
+function githubIncidentNote() {
+  try {
+    const status = fetchJson('https://www.githubstatus.com/api/v2/status.json');
+    const indicator = status?.status?.indicator;
+    const description = status?.status?.description;
+    if (indicator && indicator !== 'none') {
+      return ` | GitHub 장애 감지(${indicator}: ${description}) → 배포는 큐에 살아 있고 복구되면 자동 반영됨. 빈 트리거/리프레시 커밋 금지, 복구 감시로 계속 추적할 것.`;
+    }
+    return ' | GitHub 상태는 정상(none) → 지연이 아니라 실제 배포 문제일 수 있으니 워크플로 로그를 확인할 것.';
+  } catch (error) {
+    return ` | GitHub 상태 확인 실패(${error.message}).`;
+  }
+}
+
 function waitForPages(local, localSha) {
   const deadline = Date.now() + pagesTimeoutSeconds * 1000;
   let lastRunCheck = 0;
@@ -148,7 +164,7 @@ function waitForPages(local, localSha) {
 
   const status = runInfo ? `${runInfo.status}${runInfo.conclusion ? `/${runInfo.conclusion}` : ''}` : 'not found';
   const url = runInfo?.html_url ? ` ${runInfo.html_url}` : '';
-  throw new Error(`GitHub Pages verification timed out after ${pagesTimeoutSeconds}s; workflow=${status}${url}`);
+  throw new Error(`GitHub Pages verification timed out after ${pagesTimeoutSeconds}s; workflow=${status}${url}${githubIncidentNote()}`);
 }
 
 // payload.enc(JSON 문자열)를 .site-access.json의 첫 코드로 복호해 평문 HTML을 돌려준다.
