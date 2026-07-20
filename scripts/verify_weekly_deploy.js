@@ -12,6 +12,18 @@ const downloadsPath = '/Users/ziopeno/Downloads/Farmhannong_Agro_Dashboard_FINAL
 const sourcePdfsPath = path.join(repoRoot, 'source-pdfs');
 const downloadsSourcePdfsPath = path.join(path.dirname(downloadsPath), 'source-pdfs');
 const args = new Set(process.argv.slice(2));
+const valueArg = (name, fallback) => {
+  const prefix = `--${name}=`;
+  const raw = process.argv.slice(2).find(arg => arg.startsWith(prefix));
+  if (!raw) return fallback;
+  const value = Number(raw.slice(prefix.length));
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`${prefix}<positive number> 형식이어야 합니다.`);
+  }
+  return value;
+};
+const pagesTimeoutSeconds = valueArg('pages-timeout-seconds', 45 * 60);
+const pagesPollSeconds = valueArg('pages-poll-seconds', 20);
 // 자체검색 20건은 항상 포함. 업로드 리포트가 있으면 최대 20건(origin:"pdf") 추가 → 총 20~40건.
 const MIN_WEEKLY_CARD_COUNT = 20;
 const MAX_WEEKLY_CARD_COUNT = 40;
@@ -72,8 +84,71 @@ function mondayOfCurrentWeek() {
 
 function fetchUrlToFile(url, label) {
   const target = path.join('/tmp', `farmhannong-${label.replace(/\s+/g, '-')}.html`);
-  run('curl', ['-L', '--max-time', '30', '-sS', '-o', target, url]);
+  run('curl', ['-L', '--max-time', '30', '-sS', '-H', 'Cache-Control: no-cache', '-o', target, url]);
   return target;
+}
+
+function fetchJson(url) {
+  const headers = ['-H', 'Accept: application/vnd.github+json'];
+  if (process.env.GITHUB_TOKEN) {
+    headers.push('-H', `Authorization: Bearer ${process.env.GITHUB_TOKEN}`);
+  }
+  return JSON.parse(run('curl', ['-L', '--max-time', '30', '-sS', ...headers, url]));
+}
+
+function sleep(seconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
+}
+
+function pagesPayloadUrl(cacheKey = '') {
+  const suffix = cacheKey ? `?deploy=${encodeURIComponent(cacheKey)}&ts=${Date.now()}` : '';
+  return `https://ziopeno.github.io/farmhannong-agro-weekly-db/payload.enc${suffix}`;
+}
+
+function latestPagesRun(localSha) {
+  const api = fetchJson('https://api.github.com/repos/ziopeno/farmhannong-agro-weekly-db/actions/runs?per_page=20');
+  return api.workflow_runs?.find(run => run.name === 'pages build and deployment' && run.head_sha === localSha) || null;
+}
+
+function waitForPages(local, localSha) {
+  const deadline = Date.now() + pagesTimeoutSeconds * 1000;
+  let lastRunCheck = 0;
+  let runInfo = null;
+  let attempt = 0;
+
+  while (Date.now() < deadline) {
+    attempt += 1;
+    try {
+      const pagesText = fs.readFileSync(fetchUrlToFile(pagesPayloadUrl(localSha), 'pages payload'), 'utf8');
+      const pages = parseEncryptedDashboard(pagesText, 'pages payload');
+      if (pages.latest === local.latest && okCount(pages.cards)) {
+        console.log(`GitHub Pages verified after ${attempt} attempt(s): ${pages.latest}/${pages.cards}`);
+        return pages;
+      }
+      console.log(`GitHub Pages pending: pages=${pages.latest}/${pages.cards}, expected=${local.latest}/${local.cards}`);
+    } catch (error) {
+      console.warn(`GitHub Pages fetch pending: ${error.message}`);
+    }
+
+    // Unauthenticated GitHub API is rate-limited, so inspect the workflow at most every 2 minutes.
+    if (!runInfo || Date.now() - lastRunCheck >= 120000) {
+      runInfo = latestPagesRun(localSha);
+      lastRunCheck = Date.now();
+      if (runInfo) {
+        console.log(`Pages workflow: ${runInfo.status}${runInfo.conclusion ? `/${runInfo.conclusion}` : ''} ${runInfo.html_url}`);
+        if (runInfo.status === 'completed' && !['success', 'neutral'].includes(runInfo.conclusion)) {
+          throw new Error(`Pages workflow failed: ${runInfo.conclusion} ${runInfo.html_url}`);
+        }
+      } else {
+        console.log(`Pages workflow for ${localSha.slice(0, 7)} has not appeared yet.`);
+      }
+    }
+    sleep(pagesPollSeconds);
+  }
+
+  const status = runInfo ? `${runInfo.status}${runInfo.conclusion ? `/${runInfo.conclusion}` : ''}` : 'not found';
+  const url = runInfo?.html_url ? ` ${runInfo.html_url}` : '';
+  throw new Error(`GitHub Pages verification timed out after ${pagesTimeoutSeconds}s; workflow=${status}${url}`);
 }
 
 // payload.enc(JSON 문자열)를 .site-access.json의 첫 코드로 복호해 평문 HTML을 돌려준다.
@@ -179,16 +254,20 @@ function main() {
   const remoteSha = remoteLine.split(/\s+/)[0];
   ensure(localSha === remoteSha, `origin/main is not synced: local=${localSha}, remote=${remoteSha}`);
 
-  if (args.has('--check-pages')) {
+  if (args.has('--check-pages') || args.has('--wait-pages')) {
     // 원격은 암호문(payload.enc)을 받아 복호한 뒤 검사한다. 평문이 원격에 노출되면 안 된다.
     const rawText = fs.readFileSync(fetchUrlToFile('https://raw.githubusercontent.com/ziopeno/farmhannong-agro-weekly-db/main/payload.enc', 'raw payload'), 'utf8');
     const raw = parseEncryptedDashboard(rawText, 'raw payload');
     ensure(raw.latest === local.latest, `raw GitHub payload is stale: raw=${raw.latest}, local=${local.latest}`);
     ensure(okCount(raw.cards), `raw GitHub latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${raw.latest}, cards=${raw.cards}`);
-    const pagesText = fs.readFileSync(fetchUrlToFile('https://ziopeno.github.io/farmhannong-agro-weekly-db/payload.enc', 'pages payload'), 'utf8');
-    const pages = parseEncryptedDashboard(pagesText, 'pages payload');
-    ensure(pages.latest === local.latest, `GitHub Pages is stale: pages=${pages.latest}, local=${local.latest}`);
-    ensure(okCount(pages.cards), `GitHub Pages latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${pages.latest}, cards=${pages.cards}`);
+    if (args.has('--wait-pages')) {
+      waitForPages(local, localSha);
+    } else {
+      const pagesText = fs.readFileSync(fetchUrlToFile(pagesPayloadUrl(localSha), 'pages payload'), 'utf8');
+      const pages = parseEncryptedDashboard(pagesText, 'pages payload');
+      ensure(pages.latest === local.latest, `GitHub Pages is stale: pages=${pages.latest}, local=${local.latest}`);
+      ensure(okCount(pages.cards), `GitHub Pages latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: latest=${pages.latest}, cards=${pages.cards}`);
+    }
     // 공개 로더에 평문 카드 데이터가 섞여 있지 않은지 확인
     // 실제 평문 유출은 복호화된 app.html의 'const newsDatabase = { ...카드... }' 할당문이 로더에 섞여 들어온 경우다.
     // 로더가 (복호화 후 런타임에서) newsDatabase 변수를 단순 참조하는 것은 유출이 아니므로,
