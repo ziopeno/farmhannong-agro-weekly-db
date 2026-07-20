@@ -185,7 +185,7 @@
     '.site-logout-btn{grid-column:1/-1;border:1px solid rgba(166,53,53,.34)!important;background:rgba(255,255,255,.94)!important;color:#9b3030!important;box-shadow:0 3px 10px rgba(90,32,32,.09)!important;cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease!important}',
     '.site-logout-btn:hover{background:#fff5f5!important;border-color:#b94a4a!important;transform:translateY(-1px);box-shadow:0 5px 14px rgba(90,32,32,.14)!important;filter:none!important}',
     '.site-logout-btn:focus-visible{outline:3px solid rgba(33,134,83,.22);outline-offset:2px}',
-    '.site-logout-btn svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
+    '.site-logout-btn svg{width:1em!important;height:1em!important;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}',
     '</style>'
   ].join('');
 
@@ -196,7 +196,7 @@
     button.className = 'reset-btn header-act site-logout-btn';
     button.setAttribute('aria-label', '로그아웃');
     button.setAttribute('title', '로그아웃');
-    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span>로그아웃</span>';
+    button.innerHTML = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span>로그아웃</span>';
     button.addEventListener('click', function () {
       try {
         localStorage.removeItem('fhn_site_key');
