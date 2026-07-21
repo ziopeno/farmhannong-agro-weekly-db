@@ -54,12 +54,12 @@ cat > "$STAGE/_headers" <<'HDR'
 HDR
 
 # 5) 프로젝트 보장(없으면 생성). 이미 있으면 무시.
-npx --yes wrangler pages project create "$PROJECT" --production-branch=main >/dev/null 2>&1 || true
+npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=main >/dev/null 2>&1 || true
 
 # 6) 배포(프로덕션 = main 브랜치)
 echo "→ wrangler pages deploy (staging: $STAGE, project: $PROJECT)"
 set +e
-OUT="$(npx --yes wrangler pages deploy "$STAGE" --project-name="$PROJECT" --branch=main --commit-dirty=true 2>&1)"; RC=$?
+OUT="$(npx --yes wrangler@4 pages deploy "$STAGE" --project-name="$PROJECT" --branch=main --commit-dirty=true 2>&1)"; RC=$?
 set -e
 echo "$OUT"
 [ "$RC" -ne 0 ] && { echo "ERROR: wrangler pages deploy 실패 (rc=$RC)"; exit "$RC"; }
