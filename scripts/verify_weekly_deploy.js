@@ -105,11 +105,11 @@ function pagesPayloadUrl(cacheKey = '') {
   return `https://ziopeno.github.io/farmhannong-agro-weekly-db/payload.enc${suffix}`;
 }
 
-// Vercel 배포처(주 배포 경로). GitHub Actions/Pages와 독립. 환경변수로 override 가능.
-const VERCEL_BASE = (process.env.VERCEL_SITE_URL || 'https://farmhannong-agro-weekly.vercel.app').replace(/\/$/, '');
-function vercelPayloadUrl(cacheKey = '') {
+// Cloudflare Pages(주 배포 경로). 무료·상업사용 허용·GitHub Actions와 독립. 환경변수로 override 가능.
+const CLOUDFLARE_BASE = (process.env.CLOUDFLARE_SITE_URL || 'https://farmhannong-agro-weekly.pages.dev').replace(/\/$/, '');
+function cloudflarePayloadUrl(cacheKey = '') {
   const suffix = cacheKey ? `?v=${Date.now()}` : '';
-  return `${VERCEL_BASE}/payload.enc${suffix}`;
+  return `${CLOUDFLARE_BASE}/payload.enc${suffix}`;
 }
 
 function latestPagesRun(localSha) {
@@ -299,15 +299,15 @@ function main() {
     ensure(!/(?:const|let|var)\s+newsDatabase\s*=/.test(loader), 'public loader page leaks plaintext data');
   }
 
-  // 주 배포 경로(Vercel) 라이브 검증. GitHub Actions 장애와 무관하게 이 사이트가 최신 주차를 서빙하는지 확인.
-  if (args.has('--check-vercel')) {
-    const vtext = fs.readFileSync(fetchUrlToFile(vercelPayloadUrl('bust'), 'vercel payload'), 'utf8');
-    const vercel = parseEncryptedDashboard(vtext, 'vercel payload');
-    ensure(vercel.latest === local.latest, `Vercel payload is stale: vercel=${vercel.latest}, local=${local.latest}`);
-    ensure(okCount(vercel.cards), `Vercel latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: vercel=${vercel.latest}, cards=${vercel.cards}`);
-    const vloader = fs.readFileSync(fetchUrlToFile(`${VERCEL_BASE}/`, 'vercel loader'), 'utf8');
-    ensure(!/(?:const|let|var)\s+newsDatabase\s*=/.test(vloader), 'Vercel loader leaks plaintext data');
-    console.log(`Vercel verified: ${vercel.latest}/${vercel.cards} @ ${VERCEL_BASE}`);
+  // 주 배포 경로(Cloudflare Pages) 라이브 검증. GitHub Actions 장애와 무관하게 최신 주차 서빙 확인.
+  if (args.has('--check-cloudflare')) {
+    const ctext = fs.readFileSync(fetchUrlToFile(cloudflarePayloadUrl('bust'), 'cloudflare payload'), 'utf8');
+    const cf = parseEncryptedDashboard(ctext, 'cloudflare payload');
+    ensure(cf.latest === local.latest, `Cloudflare payload is stale: cloudflare=${cf.latest}, local=${local.latest}`);
+    ensure(okCount(cf.cards), `Cloudflare latest week must contain ${REQUIRED_WEEKLY_CARD_COUNT} cards: cloudflare=${cf.latest}, cards=${cf.cards}`);
+    const cloader = fs.readFileSync(fetchUrlToFile(`${CLOUDFLARE_BASE}/`, 'cloudflare loader'), 'utf8');
+    ensure(!/(?:const|let|var)\s+newsDatabase\s*=/.test(cloader), 'Cloudflare loader leaks plaintext data');
+    console.log(`Cloudflare verified: ${cf.latest}/${cf.cards} @ ${CLOUDFLARE_BASE}`);
   }
 
   console.log(JSON.stringify({

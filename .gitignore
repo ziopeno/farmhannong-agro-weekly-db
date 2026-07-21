@@ -18,6 +18,8 @@ AUTOMATION_SETUP.md
 .github/
 scripts/generate_report_cards.js
 
-# Vercel 배포 산출물·링크 — 공개 repo에 커밋 금지(스테이징 dir·프로젝트 링크)
+# Vercel/Cloudflare 배포 산출물·링크·토큰·CLI 상태 — 공개 repo에 커밋 금지
 .deploy/
 .vercel/
+.wrangler/
+.cloudflare.env

@@ -102,7 +102,7 @@ def main() -> None:
     verify_result = None
     if not args.skip_verify:
         verify_result = run_checked(
-            ["node", "scripts/verify_weekly_deploy.js", "--sync-downloads", "--check-vercel", "--expect-current-week"],
+            ["node", "scripts/verify_weekly_deploy.js", "--sync-downloads", "--check-cloudflare", "--expect-current-week"],
             env,
         )
 
