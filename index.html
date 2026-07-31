@@ -26,7 +26,13 @@
     background-image: radial-gradient(1000px 420px at 88% -14%, rgba(47,93,57,0.06), transparent 62%);
     color: var(--ink); padding: 24px;
   }
+  /* 들판 실루엣 배경 — 앱 히어로(글로벌 작물보호)와 톤을 잇는 장식 */
+  .gate-field { position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; width: 100%; pointer-events: none; z-index: 0; }
+  .gate-field .f1 { fill: rgba(47,158,68,0.08); animation: field-bob 9s ease-in-out infinite; }
+  .gate-field .f2 { fill: rgba(21,102,63,0.055); animation: field-bob 13s ease-in-out infinite reverse; }
+  @keyframes field-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
   .gate {
+    position: relative; z-index: 1;
     width: 100%; max-width: 430px; background: var(--paper);
     border: 1px solid var(--hair); border-radius: 18px;
     box-shadow: 0 18px 48px rgba(27,39,31,0.10); padding: 46px 38px 38px; text-align: center;
@@ -93,6 +99,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .gate { opacity: 1; }
+    .gate-field .f1, .gate-field .f2 { animation: none; }
     h1, .kicker, .sub, .row, .note { opacity: 1; }
     .sprout .stem, .sprout .leafL, .sprout .leafR { stroke-dashoffset: 0; }
     .ready *, .leaving * { animation: none !important; }
@@ -100,6 +107,10 @@
 </style>
 </head>
 <body>
+  <svg class="gate-field" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+    <path class="f2" d="M0 190 C 240 150 480 230 720 200 C 960 170 1200 230 1440 190 L1440 300 L0 300 Z"/>
+    <path class="f1" d="M0 240 C 260 200 520 270 780 240 C 1040 210 1240 262 1440 235 L1440 300 L0 300 Z"/>
+  </svg>
   <div class="gate">
     <svg class="sprout" viewBox="0 0 48 60" aria-hidden="true">
       <path class="stem"  pathLength="1" d="M24 56 L24 27"/>

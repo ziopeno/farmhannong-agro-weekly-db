@@ -34,7 +34,7 @@ ALLOW=( index.html 404.html payload.enc manifest.json icon.svg icon-192.png icon
 for f in "${ALLOW[@]}"; do
   [ -f "$f" ] && cp "$f" "$STAGE/$f"
 done
-[ -f assets/header-people-illustration.png ] && cp assets/header-people-illustration.png "$STAGE/assets/"
+# (구 헤더 인물 일러스트는 인라인 SVG 히어로로 대체되어 더 이상 배포하지 않음)
 # 출처 확인용 PDF — 이미 공개 repo에 추적되는 비민감 증빙 사본만 포함(앱의 "출처 확인용 PDF" 버튼이 참조)
 [ -d source-pdfs ] && cp -R source-pdfs "$STAGE/source-pdfs"
 
