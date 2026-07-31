@@ -35,8 +35,8 @@
   .sprout { width: 50px; height: 60px; display: block; margin: 0 auto 16px; }
   .sprout path { fill: none; stroke: var(--green); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   h1 { font-family: 'Playfair Display', serif; font-size: 1.55em; font-weight: 700; color: var(--green); letter-spacing: 0.01em; line-height: 1.15; }
-  .kicker { font-family: var(--mono); font-size: 0.62em; letter-spacing: 0.22em; color: #7c8a80; margin-top: 9px; text-transform: uppercase; }
-  .sub { font-size: 0.86em; color: #6f8077; line-height: 1.7; margin: 20px 0 24px; }
+  .kicker { font-family: var(--mono); font-size: 0.62em; letter-spacing: 0.22em; color: #67766c; margin-top: 9px; text-transform: uppercase; }
+  .sub { font-size: 0.86em; color: #5f7167; line-height: 1.7; margin: 20px 0 24px; }
   .sub b { color: var(--ink); font-weight: 700; }
   .row { display: flex; gap: 8px; }
   .input-wrap { position: relative; flex: 1; display: flex; }
@@ -64,8 +64,9 @@
   #enterBtn:disabled { opacity: 0.55; cursor: default; }
   .msg { min-height: 1.3em; margin-top: 14px; font-size: 0.82em; color: #b03a2e; font-family: var(--mono); letter-spacing: 0.01em; }
   .msg.ok { color: var(--green); }
-  .note { margin-top: 22px; font-size: 0.74em; color: #9aa392; line-height: 1.75; }
+  .note { margin-top: 22px; font-size: 0.74em; color: #67766c; line-height: 1.75; }
   .note .hr { width: 28px; height: 1px; background: var(--hair); margin: 0 auto 14px; }
+  button:focus-visible, input:focus-visible { outline: 3px solid rgba(33,134,83,0.35); outline-offset: 2px; }
 
   /* ---- intro motion (plays when body.ready) ---- */
   .ready .gate { animation: fadeIn .55s ease forwards; }

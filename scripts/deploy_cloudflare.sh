@@ -30,11 +30,13 @@ fi
 # 2) 클린 스테이징 재구성 — 화이트리스트만 복사
 rm -rf "$STAGE"
 mkdir -p "$STAGE/assets"
-ALLOW=( index.html payload.enc manifest.json icon.svg icon-192.png icon-512.png apple-touch-icon.png robots.txt )
+ALLOW=( index.html 404.html payload.enc manifest.json icon.svg icon-192.png icon-512.png apple-touch-icon.png robots.txt )
 for f in "${ALLOW[@]}"; do
   [ -f "$f" ] && cp "$f" "$STAGE/$f"
 done
 [ -f assets/header-people-illustration.png ] && cp assets/header-people-illustration.png "$STAGE/assets/"
+# 출처 확인용 PDF — 이미 공개 repo에 추적되는 비민감 증빙 사본만 포함(앱의 "출처 확인용 PDF" 버튼이 참조)
+[ -d source-pdfs ] && cp -R source-pdfs "$STAGE/source-pdfs"
 
 # 3) 방어 검증 — 민감 파일이 스테이징에 절대 없어야 함
 for bad in app.html .site-access.json .weekly-email.env; do
@@ -48,6 +50,7 @@ fi
 cat > "$STAGE/_headers" <<'HDR'
 /payload.enc
   Cache-Control: public, max-age=0, must-revalidate
+  Content-Type: application/json
 
 /*
   X-Robots-Tag: noindex, nofollow
