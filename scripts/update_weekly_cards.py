@@ -729,7 +729,14 @@ def normalize_cards(cards):
     validate_topic_mix(normalized_cards)
     validate_source_diversity(normalized_cards)
     validate_story_diversity(normalized_cards)
-    return normalized_cards
+    ordered_cards = (
+        [card for card in normalized_cards if card_topic(card) == "pesticide"]
+        + [card for card in normalized_cards if card_topic(card) == "fertilizer"]
+    )
+    for index, card in enumerate(ordered_cards):
+        title = re.sub(r"^\d+\.\s*", "", clean_text(card.get("title")))
+        card["title"] = f"{index + 1}. {title}"
+    return ordered_cards
 
 
 def generate_validated_cards(target_key, start_date, end_date, candidates):
