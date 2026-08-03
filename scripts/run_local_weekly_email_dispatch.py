@@ -81,6 +81,31 @@ def run_checked(command: list[str], env: dict[str, str]) -> subprocess.Completed
     )
 
 
+def is_download_sync_permission_error(exc: subprocess.CalledProcessError) -> bool:
+    stderr = exc.stderr or ""
+    return (
+        "EPERM" in stderr
+        and "/Downloads/source-pdfs" in stderr
+        and "scripts/verify_weekly_deploy.js" in stderr
+    )
+
+
+def verify_current_week(env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    command = ["node", "scripts/verify_weekly_deploy.js", "--sync-downloads", "--check-cloudflare", "--expect-current-week"]
+    try:
+        return run_checked(command, env)
+    except subprocess.CalledProcessError as exc:
+        if not is_download_sync_permission_error(exc):
+            raise
+        fallback = ["node", "scripts/verify_weekly_deploy.js", "--check-cloudflare", "--expect-current-week"]
+        result = run_checked(fallback, env)
+        result.stdout = (
+            "Downloads source PDF sync skipped after EPERM; Cloudflare current-week verification reran without --sync-downloads.\n"
+            + result.stdout
+        )
+        return result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Verify the current public Farmhannong week and send the weekly email locally from this Mac."
@@ -101,10 +126,7 @@ def main() -> None:
 
     verify_result = None
     if not args.skip_verify:
-        verify_result = run_checked(
-            ["node", "scripts/verify_weekly_deploy.js", "--sync-downloads", "--check-cloudflare", "--expect-current-week"],
-            env,
-        )
+        verify_result = verify_current_week(env)
 
     send_command = ["python3", "scripts/send_weekly_summary_email.py", "--require-recipients"]
     if args.preview_only:

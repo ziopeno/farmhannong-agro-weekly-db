@@ -209,6 +209,54 @@ function ensure(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function shouldIgnoreDownloadSyncEntry(name) {
+  return name === '.DS_Store' || name === 'Icon\r' || name.startsWith('._');
+}
+
+function removeManagedDownloadEntry(targetPath) {
+  try {
+    fs.rmSync(targetPath, { recursive: true, force: true });
+  } catch (error) {
+    if (shouldIgnoreDownloadSyncEntry(path.basename(targetPath))) {
+      console.warn(`skipped macOS metadata during Downloads sync: ${targetPath}`);
+      return;
+    }
+    throw error;
+  }
+}
+
+function syncDirectoryContents(sourceDir, targetDir) {
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  const sourceNames = new Set(
+    fs.readdirSync(sourceDir).filter(name => !shouldIgnoreDownloadSyncEntry(name))
+  );
+
+  for (const name of fs.readdirSync(targetDir)) {
+    if (shouldIgnoreDownloadSyncEntry(name)) continue;
+    if (!sourceNames.has(name)) {
+      removeManagedDownloadEntry(path.join(targetDir, name));
+    }
+  }
+
+  for (const name of sourceNames) {
+    const sourcePath = path.join(sourceDir, name);
+    const targetPath = path.join(targetDir, name);
+    const sourceStat = fs.statSync(sourcePath);
+    if (sourceStat.isDirectory()) {
+      if (fs.existsSync(targetPath) && !fs.statSync(targetPath).isDirectory()) {
+        removeManagedDownloadEntry(targetPath);
+      }
+      syncDirectoryContents(sourcePath, targetPath);
+    } else if (sourceStat.isFile()) {
+      if (fs.existsSync(targetPath) && fs.statSync(targetPath).isDirectory()) {
+        removeManagedDownloadEntry(targetPath);
+      }
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  }
+}
+
 function maybeSyncDownloads() {
   if (!args.has('--sync-downloads')) return;
   const local = fs.readFileSync(indexPath);
@@ -218,8 +266,7 @@ function maybeSyncDownloads() {
     console.log(`synced downloads copy: ${downloadsPath}`);
   }
   if (fs.existsSync(sourcePdfsPath)) {
-    fs.rmSync(downloadsSourcePdfsPath, { recursive: true, force: true });
-    fs.cpSync(sourcePdfsPath, downloadsSourcePdfsPath, { recursive: true });
+    syncDirectoryContents(sourcePdfsPath, downloadsSourcePdfsPath);
     console.log(`synced source PDFs: ${downloadsSourcePdfsPath}`);
   }
 }
